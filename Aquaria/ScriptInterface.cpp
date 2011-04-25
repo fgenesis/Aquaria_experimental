@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#include "../BBGE/Base.h"
 #include "ScriptInterface.h"
 extern "C"
 {
@@ -40,10 +41,10 @@ const bool throwLuaErrors = false;
 
 // Set this to true to complain (via errorLog()) whenever a script tries to
 // get or set a global variable.
-const bool complainOnGlobalVar = false;
+const bool complainOnGlobalVar = true;
 // Set this to true to complain whenever a script tries to get an undefined
 // thread-local variable.
-const bool complainOnUndefLocal = false;
+const bool complainOnUndefLocal = true;
 
 // List of all interface functions called by C++ code, terminated by NULL.
 static const char * const interfaceFunctions[] = {

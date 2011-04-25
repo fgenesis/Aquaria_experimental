@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SoundManager.h"
 #include "Core.h"
 #include "Base.h"
-#include "PackRead.h"
 
 #if defined(BBGE_BUILD_FMODEX)
     #ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE

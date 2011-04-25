@@ -18,83 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-//#define SANITY_TEST
 
-#ifdef SANITY_TEST
-	#include "Core.h"
-	#include "Quad.h"
-	
-	class SanityTest : public Core
-	{
-		std::string dud;
-	public:
-
-		SanityTest() : Core(dud)
-		{
-		}
-		void init()
-		{
-			Core::init();
-
-			if (!createWindow(800,600,32,0, "Aquaria"))	return;
-			debugLog("Init Input Library...");
-				initInputLibrary();
-			debugLog("OK");
-
-			debugLog("Init Sound Library...");
-				initSoundLibrary();
-			debugLog("OK");
-			
-			debugLog("Init Graphics Library...");
-				initGraphicsLibrary(0, 1);	
-				core->enable2D(800);
-				//core->initFrameBuffer();
-			debugLog("OK");
-
-			renderObjectLayers.resize(2);
-
-			Quad *q = new Quad;
-			q->setTexture("gfx/Logo");
-			q->position = Vector(400,300);
-			addRenderObject(q, 1);
-			
-		}
-		void onUpdate(float dt)
-		{
-			Core::onUpdate(dt);
-			if (core->getKeyState(KEY_ESCAPE))
-				quit();
-		}
-	};
-
-	int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
-						HINSTANCE	hPrevInstance,		// Previous Instance
-						LPSTR		lpCmdLine,			// Command Line Parameters
-						int			nCmdShow)			// Window Show State
-	{
-		#ifdef _DEBUG
-			_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF); 
-			_CrtSetReportMode ( _CRT_ERROR, _CRTDBG_MODE_DEBUG);
-		#endif
-	 
-		{
-			SanityTest core;
-			core.init();
-			core.main();
-			core.shutdown();
-
-		}
-		return (0);
-	}
-
-#else
-
-	#include "DSQ.h"
+#include "DSQ.h"
 
 #ifdef BBGE_BUILD_WINDOWS
 	#include <shellapi.h>
 #endif
-
 
 
 	void enumerateTest()
@@ -130,7 +59,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	}
 
 
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
+#if defined(BBGE_BUILD_WINDOWS) && defined(AQUARIA_WIN32_NOCONSOLE)
 	int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 						HINSTANCE	hPrevInstance,		// Previous Instance
 						LPSTR		lpCmdLine,			// Command Line Parameters
@@ -190,7 +119,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	{
 		check_beta();
         
-#ifdef BBGE_BUILD_WINDOWS
+/*#ifdef BBGE_BUILD_WINDOWS
 	#if defined(AQUARIA_DEMO) || defined(AQUARIA_FULL)
 		if (!exists("ran", false))
 		{
@@ -206,7 +135,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#endif
 	
 		remove("ran");
-#endif
+#endif*/
 
 		std::string fileSystem = "";
 
@@ -236,4 +165,3 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 		return (0);
 	}
 
-#endif

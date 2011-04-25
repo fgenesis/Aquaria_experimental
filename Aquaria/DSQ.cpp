@@ -906,19 +906,6 @@ void DSQ::setVersionLabelText() {
 
 	std::string regName;
 
-	#if AQUARIA_NODRM
-	#elif AQUARIA_FULL
-		os << " Registered to ";
-		
-		if (!getRegistrationName(regName))
-			exit(1);
-
-		os << regName;
-	#elif !defined(AQUARIA_DEMO)
-		os << " Registered to ";
-		os << "Review Copy";
-	#endif
-
 	versionLabel->setText(os.str());
 }
 

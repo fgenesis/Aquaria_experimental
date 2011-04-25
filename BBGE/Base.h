@@ -24,6 +24,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
+#endif
+
+#include "BBGECompileConfig.h"
+
+#ifdef BBGE_BUILD_WINDOWS
 
 	//#include "iprof/prof.h"
 	//#define BBGE_PROF(x) Prof(x)
@@ -39,6 +44,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #else
 	#define BBGE_PROF(x)
+
 
 #endif
 
@@ -78,6 +84,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_SDL
 
 	#include "SDL.h"
+    #undef main
 
 #endif
 
@@ -106,7 +113,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #pragma warning(disable:4389) // signed/unsigned mismatch
 
-#pragma warning(disable:4189) // UqqqqSEFUL: local variable is initialized but not referenced
+#pragma warning(disable:4189) // USEFUL: local variable is initialized but not referenced
+
+#define strtof strtod // MSVC does not know this
+#define snprintf _snprintf
 #endif
 
 #include <string.h>
