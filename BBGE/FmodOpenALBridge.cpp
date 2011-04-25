@@ -31,6 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <signal.h>
 #endif
 
+#include "Base.h"
 #include "Core.h"
 
 #include "FmodOpenALBridge.h"
@@ -1219,13 +1220,21 @@ FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, cons
 
     num_channels = maxchannels;
     channels = new OpenALChannel[maxchannels];
-    alGetError();  // clear any existing error state.
+    ALenum err = alGetError();  // clear any existing error state.
     for (int i = 0; i < num_channels; i++)
     {
         ALuint sid = 0;
         alGenSources(1, &sid);
-        SANITY_CHECK_OPENAL_CALL();
-        assert(alGetError() == AL_NO_ERROR);  // !!! FIXME: handle this. hardware implementations will probably trigger this.
+        err = alGetError();
+        if (err != AL_NONE)
+        {
+            char errmsg[512];
+            sprintf(errmsg, "WARNING: OpenAL error %s:%d: 0x%X\n", __FILE__, __LINE__, (int) err);
+            debugLog(errmsg);
+            num_channels = i - 1; // last channel that worked
+            break;
+        }
+
         alSourcei(sid, AL_SOURCE_RELATIVE, AL_TRUE);
         SANITY_CHECK_OPENAL_CALL();
         alSource3f(sid, AL_POSITION, 0.0f, 0.0f, 0.0f);  // no panning or spatialization in Aquaria.
@@ -1233,6 +1242,9 @@ FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, cons
         channels[i].setSourceName(sid);
         channels[i].setChannelGroup((ChannelGroup *) master_channel_group);
     }
+    std::stringstream ss;
+    ss << "Using " << num_channels << " sound channels.";
+    debugLog(ss.str());
     return FMOD_OK;
 }
 
@@ -1273,7 +1285,7 @@ FMOD_RESULT OpenALSystem::playSound(FMOD_CHANNELINDEX channelid, Sound *_sound, 
     SANITY_CHECK_OPENAL_CALL();
 
     if (!channels[channelid].start(sound))
-	return FMOD_ERR_INTERNAL;
+       return FMOD_ERR_INTERNAL;
 
     channels[channelid].reacquire();
     channels[channelid].setPaused(paused);
