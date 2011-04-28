@@ -735,6 +735,22 @@
 					RelativePath="..\..\LVPA\VFSHelper.h"
 					>
 				</File>
+				<File
+					RelativePath="..\..\LVPA\VFSLoader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\LVPA\VFSLoader.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\LVPA\VFSLoaderLVPA.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\LVPA\VFSLoaderLVPA.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="misc"
