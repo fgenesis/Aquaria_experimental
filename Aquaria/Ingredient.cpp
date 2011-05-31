@@ -22,27 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 
 
-Ingredient::Ingredients Ingredient::ingredients;
-
-IngredientData::IngredientData()
+int IngredientData::getIndex() const
 {
-	amount = 1;
-	held = 0;
-	type = IT_NONE;
-	marked = 0;
-	sorted = 0;
-}
-
-int IngredientData::getIndex()
-{
-	for (int i = 0; i < dsq->continuity.ingredientData.size(); i++)
-	{
-		if (dsq->continuity.ingredientData[i].name == this->name)
-		{
-			return i;
-		}
-	}
-	return -1;
+	return dsq->continuity.indexOfIngredientData(this);
 }
 
 bool IngredientData::hasIET(IngredientEffectType iet)
@@ -77,8 +59,6 @@ Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
 	if (isRotKind())
 		rotation.z = randAngle360();
 
-	ingredients.push_back(this);
-
 	layer = LR_ENTITIES;
 }
 
@@ -92,7 +72,7 @@ bool Ingredient::hasIET(IngredientEffectType iet)
 void Ingredient::destroy()
 {
 	Entity::destroy();
-	ingredients.remove(this);
+	dsq->game->removeIngredient(this);
 }
 
 bool Ingredient::isRotKind()
@@ -161,7 +141,7 @@ void Ingredient::onUpdate(float dt)
 			// got
 			safeKill();
 
-			dsq->continuity.pickupIngredient(data);
+			dsq->continuity.pickupIngredient(data, 1);
 
 			dsq->game->pickupIngredientEffects(data);
 

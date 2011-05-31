@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- ================================================================================================
 -- M A N T I S
@@ -140,7 +141,9 @@ end
 function update(me, dt)
 	--entity_updateMovement(me, dt)
 	if not v.fight and entity_isEntityInRange(me, v.n, 1400) then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		if not v.cut then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			v.cut = true
 			v.fight = true
 			entity_idle(v.n)

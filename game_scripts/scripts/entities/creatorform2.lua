@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 
@@ -99,10 +100,12 @@ function update(me, dt)
 	
 	if bone ~= 0 then
 		if not v.inHand and v.grabDelay == 0 and bone == v.grabPoint then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			v.inHand = true
 			avatar_fallOffWall()
 		end
 		if not v.inHand and avatar_isBursting() and bone == v.bone_body and entity_setBoneLock(v.n, me, bone) then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		else
 			local bx, by = bone_getWorldPosition(bone)
 			local x, y = entity_getPosition(v.n)
@@ -139,6 +142,7 @@ function update(me, dt)
 	end
 	
 	if not v.inHand and math.abs(entity_x(me) - entity_x(v.n)) > 256 then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		entity_flipToEntity(me, v.n)
 	end
 	

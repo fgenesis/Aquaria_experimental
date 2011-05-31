@@ -17,7 +17,7 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
 
 -- emotes
 EMOTE_NAIJAEVILLAUGH	= 0
@@ -732,7 +732,7 @@ function watchForVoice()
 	while isStreamingVoice() do watch(FRAME_TIME) end
 end
 
-function entity_watchSwimToEntitySide(ent1, ent2)	
+function entity_watchSwimToEntitySide(ent1, ent2)
 	local xoff=entity_getCollideRadius(ent2)+64
 	if entity_x(ent1) < entity_x(ent2) then
 		xoff = -xoff

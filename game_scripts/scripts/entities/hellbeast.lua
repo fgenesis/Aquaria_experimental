@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.bone_tongue = 0
 v.bone_hand = 0
@@ -266,6 +267,7 @@ function damage(me, attacker, bone, damageType, dmg)
 	end
 	
 	if not v.skull then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		bone_damageFlash(v.bone_head, 1)
 		bone_damageFlash(v.bone_jaw, 1)
 		--playNoEffect()
@@ -297,6 +299,7 @@ function animationKey(me, key)
 			playSfx("HellBeast-Stomp")
 			shakeCamera(30, 0.5)
 			if not v.skull then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				setSceneColor(0.7, 0.7, 0.7)
 				setSceneColor(1, 1, 1, 0.5)
 			end
@@ -337,6 +340,7 @@ function update(me, dt)
 	if not(entity_isState(me, STATE_DONE) or entity_isState(me, STATE_DIE)) then
 		if entity_isEntityInRange(me, v.n, 2848) then
 			if not v.started then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				emote(EMOTE_NAIJAUGH)
 				playMusic("Mithala")
 				playSfx("HellBeast-Roar")
@@ -405,6 +409,7 @@ function update(me, dt)
 			local my_y = entity_y(me)
 			
 			if not v.skull then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				v.attacksToGo = v.attacksToGo - 1
 				
 				if node_getNumEntitiesIn(v.node_check, "MermanThin")<=0 then
@@ -427,6 +432,7 @@ function update(me, dt)
 				else
 					debugLog("not no stomp")
 					if not v.lastAcid then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 						if chance(50) then
 							entity_setState(me, STATE_ACIDSPRAY)
 							v.lastAcid = true
@@ -472,6 +478,7 @@ function update(me, dt)
 						end
 					else
 						if not v.lastAcid then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 							v.lastAcid = true
 							entity_setState(me, STATE_ACIDSPRAY)
 						else
@@ -602,6 +609,7 @@ function update(me, dt)
 		v.hurtDelay = v.hurtDelay - dt
 	else
 		if not v.inHand and
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		not entity_isState(me, STATE_DONE) and not entity_isState(me, STATE_DIE)
 		then
 			local bone = entity_collideSkeletalVsCircle(me, v.n)
@@ -622,6 +630,7 @@ function update(me, dt)
 					entity_setState(me, STATE_IDLE)
 				end
 				if not v.inHand then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 					if not entity_isState(me, STATE_PAIN) and not entity_isState(me, STATE_DIE) and not entity_isState(me, STATE_CREATEMERMAN)
 					and not entity_isState(me, STATE_TRANSFORM) then
 						entity_damage(v.n, me, 1)
@@ -718,6 +727,7 @@ v.inCutScene = false
 local function cutscene(me)
 	v.n = getNaija()
 	if not v.inCutScene then		
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		v.inCutScene = true
 		
 

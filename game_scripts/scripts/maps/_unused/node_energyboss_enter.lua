@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.naija = 0
 v.door = 0
@@ -37,6 +38,7 @@ end
 
 function update(me, dt)
 	if not v.done and getStory() <= 8 then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		if node_isEntityIn(me, v.naija) then
 			v.done = true
 			

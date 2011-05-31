@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 local STATE_MOVING 	= 1001
 
@@ -181,6 +182,7 @@ function update(me, dt)
 	end
 	
 	if not v.seen and entity_isEntityInRange(me, v.n, 800) then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		emote(EMOTE_NAIJAUGH)
 		v.seen = true
 	end

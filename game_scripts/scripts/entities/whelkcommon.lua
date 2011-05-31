@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- ================================================================================================
 -- WHELK
@@ -95,6 +96,7 @@ function update(me, dt)
 	end
 	
 	if not v.isShell then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		if v.hasShell then
 			entity_moveAlongSurface(me, dt, 40, 6, 30)
 		else
@@ -119,6 +121,7 @@ function update(me, dt)
 		if entity_isBeingPulled(me) then
 			local x, y = entity_getVectorToEntity(getNaija(), me)
 			--if not vector_isLength2DIn(x, y, 300) and not v.escaping then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			if true then
 				entity_animate(me, "shellQuiver", LOOP_INF)
 				v.pullTime = v.pullTime - dt

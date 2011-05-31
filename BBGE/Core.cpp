@@ -1202,6 +1202,10 @@ void Core::init()
 		exit(0);
 #endif
 #ifdef BBGE_BUILD_SDL
+	// Disable relative mouse motion at the edges of the screen, which breaks
+	// mouse control for absolute input devices like Wacom tablets and touchscreens.
+	SDL_putenv((char *) "SDL_MOUSE_RELATIVE=0");
+
 	if((SDL_Init(0))==-1)
 	{
 		exit(0);
@@ -1479,7 +1483,7 @@ bool Core::initJoystickLibrary(int numSticks)
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 #endif
 
-	for (int i = 0; i < numSticks; i++)
+	if (numSticks > 0)
 		joystick.init(0);
 
 	joystickEnabled = true;
@@ -4069,6 +4073,17 @@ void Core::shutdownInputLibrary()
 #endif
 }
 
+void Core::shutdownJoystickLibrary()
+{
+	if (joystickEnabled) {
+		joystick.shutdown();
+#ifdef BBGE_BUIDL_SDL
+		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+#endif
+		joystickEnabled = false;
+	}
+}
+
 void Core::clearRenderObjects()
 {
 	for (int i = 0; i < renderObjectLayers.size(); i++)
@@ -4097,6 +4112,10 @@ void Core::shutdown()
 
 	debugLog("Core::shutdown");
 	shuttingDown = true;
+
+	debugLog("Shutdown Joystick Library...");
+		shutdownJoystickLibrary();
+	debugLog("OK");
 
 	debugLog("Shutdown Input Library...");
 		shutdownInputLibrary();

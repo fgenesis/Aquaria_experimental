@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- ================================================================================================
 -- AGGRO HOPPER
@@ -119,6 +120,7 @@ function update(me, dt)
 			entity_findTarget(me, 1200)
 		else
 			if not v.angry then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				if entity_isTargetInRange(me, 400) then
 					v.jumpDelay = v.jumpDelay - dt
 					if v.jumpDelay < 0 then

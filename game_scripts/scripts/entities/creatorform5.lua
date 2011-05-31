@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 
@@ -240,6 +241,7 @@ function enterState(me)
 		end
 	elseif entity_isState(me, STATE_TRANSITION) then
 		if not v.incut then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			entity_setStateTime(me, 99)
 			v.incut = true
 			entity_idle(v.n)
@@ -280,6 +282,7 @@ function exitState(me)
 		entity_setState(me, STATE_INTRO2)
 	elseif entity_isState(me, STATE_SPAWNSPHERES) then
 		if not v.ic then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			v.ic = true
 			
 			for n=1,v.songSize do

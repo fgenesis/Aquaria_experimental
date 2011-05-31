@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- CrystalHolder
 
@@ -65,6 +66,7 @@ end
 
 function update(me, dt)
 	if not v.setWaterLevel then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		v.lx,v.ly = entity_getPosition(me)
 		entity_setPosition(me, entity_x(me), getWaterLevel())
 		if not entity_isNearObstruction(me, 1) then

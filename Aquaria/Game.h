@@ -164,9 +164,6 @@ public:
 	void destroy();
 	IngredientData *getIngredientData();
 
-	typedef std::list<Ingredient*> Ingredients;
-	static Ingredients ingredients;
-
 	void eat(Entity *e);
 	bool hasIET(IngredientEffectType iet);
 protected:
@@ -177,6 +174,8 @@ protected:
 	int amount;
 	void onUpdate(float dt);
 };
+
+typedef std::list<Ingredient*> Ingredients;
 
 class WarpArea
 {
@@ -281,7 +280,6 @@ public:
 	void dropFood();
 	IngredientData *getIngredient();
 	void animateLid(bool down, bool longAnim=true);
-	IngredientData *foodHolderIngredient;
 protected:
 	bool trash;
 	Quad *wok, *ing;
@@ -291,6 +289,8 @@ protected:
 	Quad *lid;
 
 	int slot;
+private:
+	IngredientData *foodHolderIngredient;
 };
 
 class ElementTemplate
@@ -765,6 +765,8 @@ public:
 	Entity *getEntityAtCursor();
 	Vector cameraMin, cameraMax;
 	bool removeEntity(Entity *e);
+	void removeIngredient(Ingredient *i);
+	void bindIngredients();
 
 protected:
 	std::vector<Path*> paths;
@@ -1202,8 +1204,8 @@ protected:
 
 	void warpCameraTo(Vector position);
 
-
-
+private:
+	Ingredients ingredients;
 };
 
 extern Game *game;

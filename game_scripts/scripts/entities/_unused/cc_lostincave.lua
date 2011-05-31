@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 v.ix,v.iy = 0,0
@@ -93,6 +94,7 @@ function update(me, dt)
 		end
 	elseif entity_isState(me, STATE_FOLLOW) then
 		if not v.done then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			if node_isEntityIn(v.escapeNode, me) then
 				cutScene(me)
 			else

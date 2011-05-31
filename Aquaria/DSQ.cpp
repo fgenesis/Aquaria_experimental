@@ -4943,6 +4943,11 @@ void DSQ::spawnParticleEffect(const std::string &name, Vector position, float ro
 	}
 }
 
+void DSQ::spawnAllIngredients(const Vector &position)
+{
+	continuity.spawnAllIngredients(position);
+}
+
 void DSQ::updatepecue(float dt)
 {
 	if (!core->particlesPaused)

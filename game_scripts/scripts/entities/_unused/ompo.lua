@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 local STATE_RUNOFF			= 1000
 
@@ -84,6 +85,7 @@ end
 function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
 		if not v.following then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			entity_doCollisionAvoidance(me, dt, 2, 1)
 			
 			if v.following then 
@@ -293,6 +295,7 @@ function songNote(me, note)
 	--bone_scale(v.glowBody, 
 	--[[
 	if not v.spinning then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		v.spinning = true
 		entity_rotate(me, 360+entity_getRotation(me), 1, -1)
 	end

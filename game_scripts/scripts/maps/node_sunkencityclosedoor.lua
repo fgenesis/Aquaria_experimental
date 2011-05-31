@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.didInit = false
 v.done = false
@@ -35,11 +36,13 @@ end
 
 function update(me, dt)
 	if not v.didInit then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		doInit(me)
 		v.didInit = true
 	end
 	
 	if not v.done then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		if getFlag(FLAG_SUNKENCITY_PUZZLE) < SUNKENCITY_BOSSDONE then
 			if node_isEntityIn(me, getNaija()) then
 				debugLog("closing door")

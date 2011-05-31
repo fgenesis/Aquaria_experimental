@@ -144,10 +144,10 @@ if (NOT SDL_FOUND)
             set(SDL_LIBRARY_TEMP "${SDLDIR}/lib/win32/SDL.lib" CACHE INTERNAL "")
             set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY_TEMP} CACHE STRING "Where the SDL library can be found")
         else(MSVC)
-            message(ERROR "We don't have prebuilt SDL for this environment.")
+            message(SEND_ERROR "We don't have a prebuilt SDL for this environment.")
         endif(MSVC)
     else(MACOSX)
-        message(ERROR "We don't have a prebuilt SDL for this platform.")
+        message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
     endif(MACOSX)
 endif (NOT SDL_FOUND)
 
@@ -165,10 +165,10 @@ if (NOT OPENAL_FOUND)
             message(STATUS "Using internal copy of OpenAL")
             set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
         else(MSVC)
-            message(ERROR "We don't have prebuilt OpenAL for this environment.")
+            message(SEND_ERROR "We don't have a prebuilt OpenAL for this environment.")
         endif(MSVC)
     else(WIN32)
-        message(ERROR "We don't have a prebuilt OpenAL for this platform.")
+        message(SEND_ERROR "We don't have a prebuilt OpenAL for this platform.")
     endif(WIN32)
 endif (NOT OPENAL_FOUND)
 
@@ -221,6 +221,7 @@ ENDIF(MACOSX)
 
 IF(WIN32)
     ADD_DEFINITIONS(-DBBGE_BUILD_WINDOWS=1)
+	SET(EXETYPE WIN32)
 ENDIF(WIN32)
 
 
@@ -587,7 +588,7 @@ ELSE(OGGVORBIS_FOUND)
     SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${OGGVORBIS_SRCS})
 ENDIF(OGGVORBIS_FOUND)
 
-ADD_EXECUTABLE(aquaria
+ADD_EXECUTABLE(aquaria ${EXETYPE}
     ${AQUARIA_SRCS}
     ${BBGE_SRCS}
     ${FTGL_SRCS}

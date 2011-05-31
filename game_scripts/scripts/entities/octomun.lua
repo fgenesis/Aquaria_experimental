@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 v.body = 0
@@ -143,6 +144,7 @@ function update(me, dt)
 	end
 	
 	if not v.started then return end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 	
 	if quad_getAlpha(v.dark) < 0.1 then
 		v.inkBlastDelay = v.inkBlastDelay + dt

@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- ================================================================================================
 -- W A L K E R   (alpha)
@@ -110,6 +111,7 @@ function update(me, dt)
 	-- emote
 	if entity_isEntityInRange(me, v.n, 512) then
 		if not v.seen then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			if chance(50) then
 				emote(EMOTE_NAIJAWOW)
 			else

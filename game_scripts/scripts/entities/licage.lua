@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 
@@ -112,6 +113,7 @@ function update(me, dt)
 	
 	if not isFlag(FLAG_FINAL, FINAL_FREEDLI) then
 		if not v.seen and entity_isEntityInRange(me, v.n, 600) then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			entity_flipToEntity(v.n, me)
 			entity_idle(v.n)
 			emote(EMOTE_NAIJALI)

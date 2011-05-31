@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.h1 = 0
 v.h2 = 0
@@ -50,6 +51,7 @@ function update(me, dt)
 	end
 	if entity_x(v.n) > node_x(v.past) then
 		if not v.pastDefault then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			setWaterLevel(node_y(v.h1), 2)
 			v.pastDefault = true
 		end

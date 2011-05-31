@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 v.glow = 0
@@ -124,6 +125,7 @@ function update(me, dt)
 	end
 	if entity_isState(me, STATE_LUNGE) then
 		if not v.lunging then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			entity_doFriction(me, dt, 1000)
 		else
 			entity_moveTowardsTarget(me, dt, 500)

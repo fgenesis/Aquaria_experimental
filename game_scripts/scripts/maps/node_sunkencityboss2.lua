@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.spawned = false
 v.dad = 0
@@ -53,6 +54,7 @@ function update(me, dt)
 	end	
 	
 	if not v.spawned and getFlag(FLAG_SUNKENCITY_PUZZLE) == SUNKENCITY_CLAYDONE then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		debugLog("starting boss fight")
 		
 		shakeCamera(5, 3)
@@ -79,6 +81,7 @@ function update(me, dt)
 	end
 	--[[
 	if not v.spawned then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		if node_isEntityIn(me, getNaija()) then
 			entity_setState(v.dad, STATE_START)
 			entity_setState(v.mom, STATE_START)

@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 v.done = false
@@ -29,6 +30,7 @@ end
 function update(me, dt)
 	if isDeveloperKeys() then
 		if not v.done and node_isEntityIn(me, v.n) then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			debugLog("all treasures")
 			for i = FLAG_COLLECTIBLE_START, (FLAG_COLLECTIBLE_END-1) do
 				setFlag(i, 1)

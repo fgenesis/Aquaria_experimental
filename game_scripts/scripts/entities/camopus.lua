@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 
@@ -86,6 +87,7 @@ function update(me, dt)
 	if entity_isState(me, STATE_IDLE) then
 		v.inout = v.inout + dt*v.dir
 		if not v.spawn and v.inout > 0.2 then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			spawnParticleEffect("bubble-release", entity_x(me), entity_y(me))
 			v.spawn = true
 		end

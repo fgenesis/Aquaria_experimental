@@ -109,7 +109,7 @@ public:
 			bits = 32;
 			vsync = 1;
 			darkbuffersize = 256;
-			displaylists = 1;
+			displaylists = 0;
 		}
 		int shader;
 		int blur;

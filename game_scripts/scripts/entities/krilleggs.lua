@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- KRILL EGG
 
@@ -48,6 +49,7 @@ end
 
 function update(me, dt)
 	if not v.scaling and not entity_isNearObstruction(me, 1) then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		entity_addVel(me, 0, 98*dt)
 		entity_updateCurrents(me, dt)
 		entity_updateMovement(me, dt)
@@ -72,6 +74,7 @@ function update(me, dt)
 		end
 	end
 	if not v.scaling then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		entity_handleShotCollisions(me)
 	end
 end

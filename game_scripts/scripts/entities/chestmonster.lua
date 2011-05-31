@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 
@@ -118,6 +119,7 @@ end
 function damage(me, attacker, bone, damageType, dmg)
 	if entity_isState(me, STATE_OPEN) and bone == v.head then
 		if not v.hit then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			v.hit = true
 			playSfx("creatorform6-die3")
 

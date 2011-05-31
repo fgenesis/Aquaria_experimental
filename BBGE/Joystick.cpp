@@ -72,6 +72,14 @@ bool tryXInput()
 #include <linux/input.h>
 #include <errno.h>
 #include <iostream>
+
+#define BITS_TO_LONGS(x) \
+	(((x) + 8 * sizeof (unsigned long) - 1) / (8 * sizeof (unsigned long)))
+#define AQUARIA_BITS_PER_LONG (sizeof(long) * 8)
+#define AQUARIA_OFF(x)  ((x)%AQUARIA_BITS_PER_LONG)
+#define AQUARIA_BIT(x)  (1UL<<AQUARIA_OFF(x))
+#define AQUARIA_LONG(x) ((x)/AQUARIA_BITS_PER_LONG)
+#define test_bit(bit, array) ((array[AQUARIA_LONG(bit)] >> AQUARIA_OFF(bit)) & 1)
 #endif
 
 Joystick::Joystick()
@@ -147,15 +155,25 @@ void Joystick::init(int stick)
 	const char* evdevice = getenv(envkey.c_str());
 
 	if (evdevice != NULL) {
-		eventfd = open(evdevice, O_RDWR);
-		os.seekp(0);
+		eventfd = open(evdevice, O_RDWR, 0);
 		if (eventfd < 0) {
-			os << "Could not open rumble device [" << evdevice << "]: " << strerror(errno);
+			debugLog(std::string("Could not open rumble device [") + evdevice + "]: " + strerror(errno));
 		}
 		else {
-			os << "Successfully opened rumble device [" << evdevice << "]";
+			debugLog(std::string("Successfully opened rumble device [") + evdevice + "]");
+			unsigned long features[BITS_TO_LONGS(FF_CNT)];
+
+			if (ioctl(eventfd, EVIOCGBIT(EV_FF, sizeof(features)), features) == -1) {
+				debugLog(std::string("Cannot query joystick/gamepad features: ") + strerror(errno));
+				close(eventfd);
+				eventfd = -1;
+			}
+			else if (!test_bit(FF_RUMBLE, features)) {
+				debugLog("Rumble is not supported by your gamepad/joystick.");
+				close(eventfd);
+				eventfd = -1;
+			}
 		}
-		debugLog(os.str());
 	}
 	else {
 		std::cout <<
@@ -179,6 +197,28 @@ void Joystick::init(int stick)
 #if !defined(BBGE_BUILD_SDL)
 	inited = xinited;
 #endif
+#endif
+}
+
+void Joystick::shutdown()
+{
+#ifdef __LINUX__
+	if (eventfd >= 0) {
+		if (effectid != -1 && ioctl(eventfd, EVIOCRMFF, effectid) == -1) {
+			debugLog(std::string("Remove rumble effect: ") + strerror(errno));
+		}
+		close(eventfd);
+		eventfd = -1;
+	}
+#endif
+#ifdef BBGE_BUILD_SDL
+	if (sdl_joy)
+	{
+		if (SDL_JoystickOpened(stickIndex)) {
+			SDL_JoystickClose(sdl_joy);
+		}
+		sdl_joy = 0;
+	}
 #endif
 }
 
@@ -209,19 +249,30 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 		if (eventfd >= 0) {
 			struct ff_effect effect;
 			struct input_event event;
-	
+
 			effect.type = FF_RUMBLE;
 			effect.id = effectid;
-			effect.u.rumble.strong_magnitude = (uint16_t) (leftMotor * 0xffff);
-			effect.u.rumble.weak_magnitude = (uint16_t) (rightMotor * 0xffff);
+			effect.direction = 0;
+			effect.trigger.button = 0;
+			effect.trigger.interval = 0;
 			effect.replay.length = (uint16_t) (time * 1000);
 			effect.replay.delay = 0;
+			if (leftMotor > rightMotor) {
+				effect.u.rumble.strong_magnitude = (uint16_t) (leftMotor * 0xffff);
+				effect.u.rumble.weak_magnitude = (uint16_t) (rightMotor * 0xffff);
+			}
+			else {
+				effect.u.rumble.strong_magnitude = (uint16_t) (rightMotor * 0xffff);
+				effect.u.rumble.weak_magnitude = (uint16_t) (leftMotor * 0xffff);
+			}
 	
 			if (ioctl(eventfd, EVIOCSFF, &effect) == -1) {
 				debugLog(std::string("Upload rumble effect: ") + strerror(errno));
 				return;
 			}
 	
+			event.time.tv_sec = 0;
+			event.time.tv_usec = 0;
 			event.type = EV_FF;
 			event.code = effectid = effect.id;
 	

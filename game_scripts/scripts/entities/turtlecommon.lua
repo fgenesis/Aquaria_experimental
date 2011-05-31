@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- ================================================================================================
 -- TURTLE
@@ -101,6 +102,7 @@ function update(me, dt)
 	end
 	]]--
 	if not v.isShell then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		
 		entity_rotateToVel(me, 0.1)
 		
@@ -145,6 +147,7 @@ function update(me, dt)
 				
 			end
 			if not vector_isLength2DIn(x, y, 300) and not v.escaping then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				
 
 			end
@@ -188,6 +191,7 @@ function update(me, dt)
 	end
 	
 	if not v.isShell then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		entity_doEntityAvoidance(me, dt, 32, 1.0)
 		entity_doCollisionAvoidance(me, dt, 6, 1.0)
 	end
@@ -218,6 +222,7 @@ end
 
 function dieNormal(me)
 	if not v.isShell and not v.hasShell then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		spawnIngredient("TurtleMeat", entity_x(me), entity_y(me))
 	end
 end

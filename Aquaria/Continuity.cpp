@@ -58,9 +58,9 @@ bool Continuity::isIngredientFull(IngredientData *data)
 {
 	for (int i = 0; i < ingredients.size(); i++)
 	{
-		if (nocasecmp(ingredients[i].name, data->name)==0)
+		if (nocasecmp(ingredients[i]->name, data->name)==0)
 		{
-			if (ingredients[i].amount >= MAX_INGREDIENT_AMOUNT)
+			if (ingredients[i]->amount >= MAX_INGREDIENT_AMOUNT)
 				return true;
 			else
 				return false;
@@ -69,27 +69,35 @@ bool Continuity::isIngredientFull(IngredientData *data)
 	return false;
 }
 
-bool Continuity::pickupIngredient(IngredientData *d, bool effects)
+void Continuity::pickupIngredient(IngredientData *d, int amount, bool effects)
 {
 	learnRecipe(d->name, effects);
 
-	for (int i = 0; i < ingredients.size(); i++)
+	if (!getIngredientHeldByName(d->name))
 	{
-		if (nocasecmp(ingredients[i].name, d->name)==0)
-		{
-			if (ingredients[i].amount < MAX_INGREDIENT_AMOUNT)
-			{
-				ingredients[i].amount++;
-
-				return true;
-			}
-			return false;
-		}
+		ingredients.push_back(d);
 	}
 
-	ingredients.push_back(*d);
+	if (d->amount < MAX_INGREDIENT_AMOUNT - amount)
+	{
+		d->amount += amount;
+	}
+	else
+	{
+		d->amount = MAX_INGREDIENT_AMOUNT;
+	}
+}
 
-	return true;
+int Continuity::indexOfIngredientData(const IngredientData* data) const
+{
+	for (int i = 0; i < ingredientData.size(); i++)
+	{
+		if (ingredientData[i]->name == data->name)
+		{
+			return i;
+		}
+	}
+	return -1;
 }
 
 #define FOR_INGREDIENTDATA(x) for (int x = 0; x < ingredientData.size(); x++)
@@ -98,21 +106,22 @@ IngredientData *Continuity::getIngredientDataByName(const std::string &name)
 {
 	FOR_INGREDIENTDATA(i)
 	{
-		if (nocasecmp(ingredientData[i].name, name)==0)
-			return &ingredientData[i];
+		if (nocasecmp(ingredientData[i]->name, name)==0)
+			return ingredientData[i];
 	}
 	return 0;
 }
 
-IngredientData *Continuity::getIngredientHeldByName(const std::string &name) {
+IngredientData *Continuity::getIngredientHeldByName(const std::string &name) const
+{
 	for (int i = 0; i < ingredients.size(); i++) {
-		if (nocasecmp(ingredients[i].name, name)==0)
-			return &ingredients[i];
+		if (nocasecmp(ingredients[i]->name, name)==0)
+			return ingredients[i];
 	}
 	return 0;
 }
 
-IngredientType Continuity::getIngredientTypeFromName(const std::string &name)
+IngredientType Continuity::getIngredientTypeFromName(const std::string &name) const
 {	
 	if (name == "Meat")
 		return IT_MEAT;
@@ -158,16 +167,16 @@ IngredientType Continuity::getIngredientTypeFromName(const std::string &name)
 	return IT_NONE;
 }
 
-IngredientData *Continuity::getIngredientByIndex(int idx)
+IngredientData *Continuity::getIngredientHeldByIndex(int idx) const
 {
 	if (idx < 0 || idx >= ingredients.size()) return 0;
-	return &ingredients[idx];
+	return ingredients[idx];
 }
 
 IngredientData *Continuity::getIngredientDataByIndex(int idx)
 {
 	if (idx < 0 || idx >= ingredientData.size()) return 0;
-	return &ingredientData[idx];
+	return ingredientData[idx];
 }
 
 Recipe::Recipe()
@@ -294,18 +303,18 @@ void Continuity::sortFood()
 	{
 		
 
-		std::vector<IngredientData> sort;
+		std::vector<IngredientData*> sort;
 
 		for (int i = 0; i < dsq->continuity.ingredients.size(); i++)
 		{
-			dsq->continuity.ingredients[i].sorted = 0;
+			dsq->continuity.ingredients[i]->sorted = false;
 		}
 
 		for (int j = 0; j < sortOrder.size(); j++)
 		{
 			for (int i = 0; i < dsq->continuity.ingredients.size(); i++)
 			{
-				IngredientData *data = &dsq->continuity.ingredients[i];
+				IngredientData *data = dsq->continuity.ingredients[i];
 				if (!data->sorted)
 				{
 					if (sortOrder[j].type == IT_NONE || sortOrder[j].type == data->type)
@@ -314,8 +323,8 @@ void Continuity::sortFood()
 						{
 							if (sortOrder[j].name == data->name)
 							{
-								data->sorted = 1;
-								sort.push_back(*data);
+								data->sorted = true;
+								sort.push_back(data);
 							}
 						}
 						else if (sortOrder[j].effectType != IET_NONE)
@@ -326,16 +335,16 @@ void Continuity::sortFood()
 								{
 									if (sortOrder[j].effectAmount == 0 || data->effects[c].magnitude == sortOrder[j].effectAmount)
 									{
-										data->sorted = 1;
-										sort.push_back(*data);
+										data->sorted = true;
+										sort.push_back(data);
 									}
 								}
 							}
 						}
 						else
 						{
-							data->sorted = 1;
-							sort.push_back(*data);
+							data->sorted = true;
+							sort.push_back(data);
 						}
 					}
 				}
@@ -344,11 +353,11 @@ void Continuity::sortFood()
 
 		for (int i = 0; i < dsq->continuity.ingredients.size(); i++)
 		{
-			IngredientData *data = &dsq->continuity.ingredients[i];
+			IngredientData *data = dsq->continuity.ingredients[i];
 			if (!data->sorted)
 			{
-				data->sorted = 1;
-				sort.push_back(*data);
+				data->sorted = true;
+				sort.push_back(data);
 			}
 		}
 
@@ -877,6 +886,15 @@ void Continuity::loadTreasureData()
 	in2.close();
 }
 
+void Continuity::clearIngredientData()
+{
+	for (IngredientDatas::iterator i = ingredientData.begin(); i != ingredientData.end(); ++ i)
+	{
+		delete *i;
+	}
+	ingredientData.clear();
+}
+
 void Continuity::loadIngredientData()
 {
 	std::string line, name, gfx, type, effects;
@@ -895,7 +913,7 @@ void Continuity::loadIngredientData()
 	}
 	*/
 
-	ingredientData.clear();
+	clearIngredientData();
 	recipes.clear();
 
 	std::ifstream in("data/ingredients.txt");
@@ -916,10 +934,7 @@ void Continuity::loadIngredientData()
 
 		std::getline(inLine, effects);
 
-		IngredientData data;
-		data.name = name;
-		data.gfx = gfx;
-		data.type = getIngredientTypeFromName(type);
+		IngredientData *data = new IngredientData(name, gfx, getIngredientTypeFromName(type));
 
 		if (!effects.empty())
 		{
@@ -1028,7 +1043,7 @@ void Continuity::loadIngredientData()
 							fx.magnitude += 0.1f;
 						c++;
 					}
-					data.effects.push_back(fx);
+					data->effects.push_back(fx);
 				}
 			}
 		}
@@ -1381,16 +1396,7 @@ void Continuity::castSong(int num)
 			}
 			else
 			{
-				for (Ingredient::Ingredients::iterator i = Ingredient::ingredients.begin(); i != Ingredient::ingredients.end(); i++)
-				{
-					Vector v = dsq->game->avatar->position - (*i)->position;
-					if (!v.isLength2DIn(16))
-					{
-						v.setLength2D(500);
-						(*i)->vel += v;
-					}
-				}
-
+				dsq->game->bindIngredients();
 				dsq->game->avatar->setNearestPullTarget();
 				if (!dsq->game->avatar->pullTarget)
 				{
@@ -2121,27 +2127,26 @@ void Continuity::initAvatar(Avatar *a)
 	a->skeletalSprite.animate(a->getIdleAnimName(), -1, 0);
 }
 
-void Continuity::removeEmptyIngredients(int start)
+void Continuity::spawnAllIngredients(const Vector &position)
 {
-	for (int i = start; i < ingredients.size(); i++)
+	for (int i = 0; i < ingredientData.size(); i++)
 	{
-		IngredientData ing = ingredients[i];
+		dsq->game->spawnIngredient(ingredientData[i]->name, position, 4, 0);
+	}
+}
 
-		if (ingredients[i].amount == 0 && ingredients[i].held <= 0)
+void Continuity::removeEmptyIngredients()
+{
+	for (IngredientDatas::iterator i = ingredients.begin(); i != ingredients.end();)
+	{
+		IngredientData *data = *i;
+		if (data->amount == 0 && data->held <= 0)
 		{
-			IngredientData remove = ingredients[i];
-
-			Ingredients copy = ingredients;
-			ingredients.clear();
-
-			for (int c = 0; c < copy.size(); c++)
-			{
-				if (copy[c].name == remove.name) continue;
-				ingredients.push_back(copy[c]);
-			}
-
-			removeEmptyIngredients(i);
-			return;
+			i = ingredients.erase(i);
+		}
+		else
+		{
+			++ i;
 		}
 	}
 }
@@ -2429,7 +2434,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	std::ostringstream ingrOs;
 	for (int i = 0; i < ingredients.size(); i++)
 	{
-		IngredientData *data = &ingredients[i];
+		IngredientData *data = ingredients[i];
 		ingrOs << data->getIndex() << " " << data->amount << " ";
 	}
 	startData.SetAttribute("ingr", ingrOs.str());
@@ -2797,9 +2802,8 @@ void Continuity::loadFile(int slot)
 				IngredientData *data = getIngredientDataByIndex(idx);
 				if (data)
 				{
-					IngredientData d2 = (*data);
-					d2.amount = amount;
-					pickupIngredient(&d2, false);
+					data->amount = 0;
+					pickupIngredient(data, amount, false);
 				}
 			}
 		}

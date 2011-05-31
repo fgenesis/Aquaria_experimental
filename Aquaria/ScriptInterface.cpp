@@ -130,11 +130,6 @@ static const char * const interfaceFunctions[] = {
 //    itself defines a number of global constants for use in scripts --
 //    see the "SCRIPT CONSTANTS" section toward the bottom of this file.)
 //
-//    It is customary to write "v = getVars()" (note that this "v" is
-//    global, not local) at the top of each script to clarify what "v" is
-//    used for; the getVars() function returns the current instance's local
-//    variable table.  However, this line is not absolutely necessary.
-//
 // -- DO define instance functions in the global namespace.
 //
 //    As an exception to the rule above, interface functions such as
@@ -223,6 +218,54 @@ static const char * const interfaceFunctions[] = {
 //    variable is always set to the same thing (such as an empty table).
 // -- Never call interface functions from other functions.
 // -- Always perform instance-specific setup in init(), not at file scope.
+//
+// ====================
+// Compatibility notes:
+// ====================
+//
+// Due to the use of an instance variable table (the "v" global), scripts
+// written for this version of Aquaria will _not_ work with commercial
+// releases (at least through version 1.1.3) of the game; likewise, the
+// scripts from those commercial releases, and mods written to target
+// those releases, will not work with this engine.
+//
+// The latter problem is unfortunately an unsolvable one, in any practical
+// sense.  Since the original engine created a new Lua state for each
+// script, scripts could create and modify global variables with impunity.
+// The mere act of loading such a script could wreak havoc on the single
+// Lua state used in the current engine, and attempting to work around
+// this would require at least the implementation of a custom Lua parser
+// to analyze and/or alter each script before it was passed to the Lua
+// interpreter.
+//
+// However, the former problem -- of writing scripts for this version of
+// the engine which also work on earlier versions -- can be solved with
+// a few extra lines of code at the top of each script.  Since the new
+// engine initializes the "v" global before each call to a script,
+// including when the script is first loaded, scripts can check for the
+// existence of this variable and assign an empty table to it if needed,
+// such as with this line:
+//
+// if not v then v = {} end
+//
+// Additionally, the current engine provides built-in constants which
+// were formerly loaded from external files.  To differentiate between
+// this and other versions of the engine, the script interface exports a
+// constant named AQUARIA_VERSION, generated directly from the program
+// version (shown on the title screen) as:
+//     major*10000 + minor*100 + revision
+// For example, in version 1.1.3, AQUARIA_VERSION == 10103.  In earlier
+// versions of the engine, the value of this constant will be nil, which
+// can be used as a trigger to load the constant definition file from
+// that version:
+//
+// if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
+//
+// Note that scripts should _not_ rely on AQUARIA_VERSION for the v = {}
+// assignment.  The code "if not AQUARIA_VERSION then v = {} end" would
+// work correctly in a top-level script, but if executed from a script
+// used as an include file, the table created in the include file would
+// overwrite any existing table created by the file's caller.
 //
 
 //============================================================================================
@@ -442,20 +485,14 @@ static SkeletalSprite *getSkeletalSprite(Entity *e)
 #define luaReturnVec3(x,y,z)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); lua_pushnumber(L, (z)); return 3;} while(0)
 
 
-luaFunc(getVars)
+// Set the global "v" to the instance's local variable table.  Must be
+// called when starting a script.
+static void fixupLocalVars(lua_State *L)
 {
 	lua_getglobal(L, "_threadvars");
 	lua_pushlightuserdata(L, L);
 	lua_gettable(L, -2);
 	lua_remove(L, -2);
-	return 1;
-}
-
-// Set the global "v" to the instance's local variable table.  Must be
-// called when starting a script.
-static void fixupLocalVars(lua_State *L)
-{
-	l_getVars(L);
 	lua_setglobal(L, "v");
 }
 
@@ -1797,7 +1834,7 @@ luaFunc(getNearestIngredient)
 
 luaFunc(spawnAllIngredients)
 {
-	dsq->game->spawnAllIngredients(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)));
+	dsq->spawnAllIngredients(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)));
 	luaReturnNum(0);
 }
 
@@ -7094,10 +7131,9 @@ static const struct {
 	const char *name;
 	lua_CFunction func;
 } luaFunctionTable[] = {
+
 	// override Lua's standard dofile(), so we can handle filename case issues.
 	{"dofile", l_dofile_caseinsensitive},
-
-	luaRegister(getVars),
 
 	luaRegister(shakeCamera),
 	luaRegister(upgradeHealth),
@@ -8057,6 +8093,9 @@ static const struct {
 	const char *name;
 	lua_Number value;
 } luaConstantTable[] = {
+
+	{"AQUARIA_VERSION", VERSION_MAJOR*10000 + VERSION_MINOR*100 + VERSION_REVISION},
+
 	// emotes
 	luaConstant(EMOTE_NAIJAEVILLAUGH),
 	luaConstant(EMOTE_NAIJAGIGGLE),

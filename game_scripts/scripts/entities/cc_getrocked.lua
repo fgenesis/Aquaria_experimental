@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 v.spawnedEnemies = false
@@ -93,6 +94,7 @@ function update(me, dt)
 			end
 		else
 			if not v.spawnedEnemies then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				if entity_isEntityInRange(me, v.n, 128) then
 					spawnEnemies(me)
 				end

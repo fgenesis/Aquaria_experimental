@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- moves around
 -- follows dropped flowers
@@ -136,6 +137,7 @@ function sporesDropped(me, x, y, t)
 		return
 	end
 	if not v.done then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		if entity_isPositionInRange(me, x, y, 700) then
 			if v.lx == 0 and v.ly == 0 then
 				v.lx,v.ly = entity_getPosition(me)

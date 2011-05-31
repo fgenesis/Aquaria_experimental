@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 v.t = 0
@@ -119,7 +120,7 @@ function update(me, dt)
 			e = getNextEntity()
 		end
 		if c < toomany then
-			e = createEntity("final-mutant", "", entity_x(me), entity_y(me))
+			local e = createEntity("final-mutant", "", entity_x(me), entity_y(me))
 			spawnParticleEffect("tinyredexplode", entity_x(e), entity_y(e))
 			entity_alpha(e, 0)
 			entity_alpha(e, 1, 0.5)

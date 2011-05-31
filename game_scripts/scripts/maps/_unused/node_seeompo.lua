@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.ompo = 0
 v.n = 0
@@ -32,6 +33,7 @@ function update(me)
 		v.ompo = getEntity("Ompo")
 	end
 	if not v.done and isFlag(FLAG_OMPO, 2) and node_isEntityIn(me, v.n) then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		v.done = true
 		entity_idle(v.n)
 		watch(1)

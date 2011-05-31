@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 v.started = false
@@ -54,6 +55,7 @@ end
 function update(me, dt)
 	if isFlag(FLAG_MITHALAS_PRIESTS,0) then
 		if not v.started then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			if node_isEntityIn(me, v.n) then
 				v.started = true
 				entity_idle(v.n)

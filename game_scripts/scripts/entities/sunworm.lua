@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 
 -- entity specific
@@ -209,9 +210,11 @@ function update(me, dt)
 	end
 	if entity_getState(me)==STATE_IDLE or entity_isState(me, STATE_BLOW) then
 		if not v.started then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			if not entity_hasTarget(me) then
 				--entity_findTarget(me, 2000)
 				--if not v.started then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				if node_isEntityIn(v.enter, v.n) then
 					v.started = true
 					playSfx("sunworm-roar")
@@ -381,6 +384,7 @@ function enterState(me)
 		avatar_fallOffWall()
 	elseif entity_isState(me, STATE_DEATHSCENE) then
 		if not v.inCutScene then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			v.inCutScene = true
 			
 			entity_setStateTime(me, 99)

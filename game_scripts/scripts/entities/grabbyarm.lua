@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- ================================================================================================
 -- G R A B B Y   A R M   (beta)
@@ -131,7 +132,7 @@ function update(me, dt)
 	elseif entity_isState(me, STATE_IN) then
 		if v.grabDelay > 0 then v.grabDelay = v.grabDelay - dt
 		elseif v.grabDelay <= 0 then
-			grabRange = 128
+			local grabRange = 128
 			if entity_isEntityInRange(me, v.n, grabRange) then
 				entity_setState(me, STATE_OUT)
 			end

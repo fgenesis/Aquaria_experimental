@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 local STATE_EYESOPEN 		= 1000
 local STATE_DIE			= 1001
@@ -233,6 +234,7 @@ v.inCutScene = false
 local function cutscene(me)
 	v.n = getNaija()
 	if not v.inCutScene then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		v.inCutScene = true
 		pickupGem("Boss-PlantGoddess")
 		setFlag(FLAG_BOSS_FOREST,1)
@@ -334,6 +336,7 @@ function update(me, dt)
 	
 	if isFlag(FLAG_BOSS_FOREST, 0) and node_isEntityIn(v.enter, v.n) then
 		if not v.started then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			v.started = true
 			entity_setState(v.door, STATE_CLOSE)
 			playMusic("ForestGod")

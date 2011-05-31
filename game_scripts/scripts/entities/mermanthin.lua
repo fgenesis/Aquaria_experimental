@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- ================================================================================================
 -- Merman / Thin
@@ -204,6 +205,7 @@ function update(me, dt)
 	end
 
 	if not v.playedSound and entity_isEntityInRange(me, getNaija(), 800) then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		v.playSoundDelay = v.playSoundDelay - dt
 		if v.playSoundDelay < 0 then
 			v.playedSound = true

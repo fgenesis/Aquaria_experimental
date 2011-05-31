@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.minNode = 1
 v.maxNodes = 7
@@ -164,6 +165,7 @@ end
 
 function songNoteDone(me, note, t)
 	if not v.raceStarted then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		v.songNote1 = v.songNote2
 		v.songNote2 = v.songNote3
 		v.songNote3 = v.songNote4

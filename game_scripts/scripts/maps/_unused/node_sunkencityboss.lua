@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.spawned = false
 v.dad = 0
@@ -43,6 +44,7 @@ end
 
 function update(me, dt)
 	if not v.didInit then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		doInit(me)
 		v.didInit = true
 	end
@@ -54,6 +56,7 @@ function update(me, dt)
 		entity_setState(v.door, STATE_OPEN)
 	end	
 	if not v.spawned then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 		if node_isEntityIn(me, getNaija()) then
 			entity_setState(v.dad, STATE_START)
 			entity_setState(v.mom, STATE_START)

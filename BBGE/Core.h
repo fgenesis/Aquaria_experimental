@@ -788,6 +788,7 @@ class Joystick
 public:
 	Joystick();
 	void init(int stick=0);
+	void shutdown();
 	//Ranges from 0 to 65535 (full speed).
 	void rumble(float leftMotor, float rightMotor, float time);
 	void update(float dt);
@@ -1356,6 +1357,7 @@ protected:
 	bool initJoystickLibrary(int numSticks=1);
 	bool initGraphicsLibrary(int w, int h, bool fullscreen, int vsync, int bpp, bool recreate=true);
 	void shutdownInputLibrary();
+	void shutdownJoystickLibrary();
 	void shutdownGraphicsLibrary(bool kill=true);
 	void shutdownSoundLibrary();
 

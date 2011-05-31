@@ -692,19 +692,25 @@ struct IngredientEffect
 class IngredientData
 {
 public:
-	IngredientData();
-	int getIndex();
-	std::string name, gfx;
-	IngredientType type;
+	IngredientData(const std::string &name, const std::string &gfx, IngredientType type)
+		: name(name), gfx(gfx), amount(0), held(0), type(type), marked(0), sorted(false) {}
+	int getIndex() const;
+	const std::string name, gfx;
+	const IngredientType type;
 	int amount;
 	int held;
 	int marked;
-	int sorted;
+	bool sorted;
 	bool hasIET(IngredientEffectType iet);
 
 	typedef std::vector<IngredientEffect> IngredientEffects;
 	IngredientEffects effects;
+private:
+	// ensure that IngredientData instances are never copied:
+	IngredientData(const IngredientData&);
+	const IngredientData& operator=(const IngredientData&);
 };
+typedef std::vector<IngredientData*> IngredientDatas;
 
 class IngredientDescription
 {
@@ -884,6 +890,7 @@ class Continuity
 {
 public:
 	Continuity();
+	~Continuity() { clearIngredientData(); }
 	void init();
 	void shutdown();
 	void initAvatar(Avatar *a);
@@ -1057,27 +1064,25 @@ public:
 	std::string getSongNameBySlot(int slot);
 	void toggleLiCombat(bool t);
 
-	bool pickupIngredient(IngredientData *i, bool effects=true);
-	IngredientData *getIngredientHeldByName(const std::string &name); // an ingredient that the player actually has; in the ingredients list
-	IngredientData *getIngredientDataByName(const std::string &name);	// an ingredientin the general data list; ingredientData
+	void pickupIngredient(IngredientData *i, int amount, bool effects=true);
+	int indexOfIngredientData(const IngredientData* data) const;
+	IngredientData *getIngredientHeldByName(const std::string &name) const; // an ingredient that the player actually has; in the ingredients list
+	IngredientData *getIngredientDataByName(const std::string &name); // an ingredient in the general data list; ingredientData
 
-	IngredientData *getIngredientByIndex(int idx);
+	IngredientData *getIngredientHeldByIndex(int idx) const;
 	IngredientData *getIngredientDataByIndex(int idx);
 
 	void applyIngredientEffects(IngredientData *data);
 
 	void loadIngredientData();
-	IngredientType getIngredientTypeFromName(const std::string &name);
+	bool hasIngredients() const { return !ingredients.empty(); }
+	IngredientDatas::size_type ingredientCount() const { return ingredients.size(); }
+	IngredientType getIngredientTypeFromName(const std::string &name) const;
 
-	void removeEmptyIngredients(int start=0);
-
-	typedef std::vector<IngredientData> Ingredients;
-	Ingredients ingredients;
+	void removeEmptyIngredients();
+	void spawnAllIngredients(const Vector &position);
 	
 	std::vector<std::string> unsortedOrder;
-
-	typedef std::vector<IngredientData> IngredientDataContainer;
-	IngredientDataContainer ingredientData;
 
 	typedef std::vector<Recipe> Recipes;
 	Recipes recipes;
@@ -1162,6 +1167,11 @@ protected:
 	int intFlags[MAX_FLAGS];
 	typedef std::map<std::string,std::string> StringFlags;
 	StringFlags stringFlags;
+private:
+	void clearIngredientData();
+
+	IngredientDatas ingredients; // held ingredients
+	IngredientDatas ingredientData; // all possible ingredients
 };
 
 class Profile
@@ -1359,6 +1369,7 @@ public:
 	void collectScriptGarbage();
 
 	void spawnParticleEffect(const std::string &name, Vector position, float rot=0, float t=0, int layer=LR_PARTICLES, float follow=0);
+	void spawnAllIngredients(const Vector &position);
 
 	std::string getDialogueFilename(const std::string &f);
 

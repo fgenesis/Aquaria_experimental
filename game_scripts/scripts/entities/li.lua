@@ -17,7 +17,8 @@
 -- along with this program; if not, write to the Free Software
 -- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-v = getVars()
+if not v then v = {} end
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 -- ================================================================================================
 -- Merman / Thin
@@ -145,6 +146,7 @@ function activate(me)
 			entity_idle(v.n)
 			watch(1)
 			if not v.switchGiggle then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				emote(EMOTE_NAIJAGIGGLE)
 				v.switchGiggle = true
 			end
@@ -1045,6 +1047,7 @@ function update(me, dt)
 			bone_setRenderPass(v.bone_leftHand, 3)
 			
 			if not v.forcedHug then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 				if not isForm(FORM_NORMAL) or not isInputEnabled() or entity_isFollowingPath(v.n) or avatar_getStillTimer() < 1 or v.honeyPower ~= entity_getHealthPerc(v.n) then
 					endHug(me)
 				end
@@ -1241,6 +1244,7 @@ function enterState(me, state)
 		entity_setActivationType(me, AT_CLICK)
 		
 		if not v.forcedHug then
+if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 			if chance(75) then
 				if chance(50) then
 					emote(EMOTE_NAIJAGIGGLE)
