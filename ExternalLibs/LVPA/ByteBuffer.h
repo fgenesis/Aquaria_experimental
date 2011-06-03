@@ -99,6 +99,11 @@ class ByteBuffer
             append<uint32>(value);
             return *this;
         }
+        ByteBuffer &operator<<(int value)
+        {
+            append<int>(value);
+            return *this;
+        }
         ByteBuffer &operator<<(uint64 value)
         {
             append<uint64>(value);
@@ -145,6 +150,11 @@ class ByteBuffer
         ByteBuffer &operator>>(uint32 &value)
         {
             value = read<uint32>();
+            return *this;
+        }
+        ByteBuffer &operator>>(int &value)
+        {
+            value = read<int>();
             return *this;
         }
         ByteBuffer &operator>>(uint64 &value)

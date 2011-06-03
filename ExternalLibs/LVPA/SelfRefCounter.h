@@ -1,7 +1,8 @@
 #ifndef SELFREFCOUNTER_H
 #define SELFREFCOUNTER_H
 
-
+#include "Errors.h"
+#include "DebugStuff.h"
 #include "SDLAtomic.h"
 
 // SelfRefCounter: used for any type of objects that are NOT stored in the ResourceMgr.

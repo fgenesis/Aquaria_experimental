@@ -302,6 +302,7 @@ bool CreateDirRec(const char *dir)
 }
 
 // current system time in ms
+/*
 uint32 getMSTime(void)
 {
     uint32 time_in_ms = 0;
@@ -316,6 +317,7 @@ uint32 getMSTime(void)
 
     return time_in_ms;
 }
+*/
 
 uint32 getMSTimeDiff(uint32 oldMSTime, uint32 newMSTime)
 {
@@ -744,4 +746,41 @@ uint32 GetConsoleWidth(void)
         return 80; // the standard, because we don't know any better
     return ws.ws_col;
 #endif
+}
+
+// copy strings, mangling newlines to system standard
+// windows has 13+10
+// *nix has 10
+size_t strnNLcpy(char *dst, const char *src, uint32 n /* = -1 */)
+{
+    char *olddst = dst;
+    bool had10 = false, had13 = false;
+
+    --n; // reserve 1 for \0 at end
+
+    while(*src && n)
+    {
+        if((had13 && *src == 10) || (had10 && *src == 13))
+        {
+            ++src; // last was already mangled
+            had13 = had10 = false; // processed one CRLF pair
+            continue;
+        }
+        had10 = *src == 10;
+        had13 = *src == 13;
+
+        if(had10 || had13)
+        {
+            *dst++ = '\n';
+            ++src;
+        }
+        else
+            *dst++ = *src++;
+
+        --n;
+    }
+
+    *dst++ = 0;
+
+    return dst - olddst;
 }

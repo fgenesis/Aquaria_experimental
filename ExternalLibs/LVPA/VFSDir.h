@@ -34,7 +34,6 @@ public:
     SelfRefCounter<VFSDir> ref;
 
 private:
-    MLD;
 };
 
 class VFSDirReal : public VFSDir

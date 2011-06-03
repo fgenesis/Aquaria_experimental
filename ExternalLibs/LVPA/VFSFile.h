@@ -37,7 +37,6 @@ public:
     SelfRefCounter<VFSFile> ref;
 
 private:
-    MLD;
 };
 
 class VFSFileReal : public VFSFile

@@ -190,6 +190,8 @@ VFSFile *VFSHelper::GetFile(const char *fn)
         }
     }
 
+    //printf("VFS: GetFile: %s -> %s\n", fn, vf ? "ok" : "FAIL!");
+
     return vf;
 }
 

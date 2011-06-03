@@ -86,11 +86,12 @@ VFSFile *VFSDir::getFile(const char *fn)
     // if there is a '/' in the string, descend into subdir and continue there
     if(slashpos)
     {
-        *slashpos = 0; // temp change to avoid excess string mangling
+        //*slashpos = 0; // temp change to avoid excess string mangling
         const char *sub = slashpos + 1;
+        std::string t(fn, slashpos - fn);
 
-        VFSDir *subdir = getDir(fn); // fn is null-terminated early here
-        *slashpos = '/'; // restore original string
+        VFSDir *subdir = getDir(t.c_str()); // fn is null-terminated early here
+        //*slashpos = '/'; // restore original string
 
         return subdir ? subdir->getFile(sub) : NULL;
     }
@@ -116,7 +117,7 @@ VFSDir *VFSDir::getDir(const char *subdir, bool forceCreate /* = false */)
         if(it != _subdirs.end())
         {
             *slashpos = '/'; // restore original string
-            ret = it->second->getDir(sub, forceCreate); // descend into subdirs
+            ret = *sub ? it->second->getDir(sub, forceCreate) : it->second; // descend into subdirs
         }
         else if(forceCreate)
         {

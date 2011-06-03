@@ -21,7 +21,7 @@ bool FileExists(std::string);
 bool IsDirectory(const char *);
 bool CreateDir(const char*);
 bool CreateDirRec(const char*);
-uint32 getMSTime(void);
+//uint32 getMSTime(void);
 uint32 getMSTimeDiff(uint32, uint32);
 uint32 GetFileSize(const char*);
 void _FixFileName(std::string&);
@@ -43,6 +43,8 @@ void MakeSlashTerminated(std::string& s);
 void GetFileListRecursive(const std::string dir, std::list<std::string>& files, bool withQueriedDir = false);
 bool WildcardMatch(const char *str, const char *pattern);
 uint32 GetConsoleWidth(void);
+
+size_t strnNLcpy(char *dst, const char *src, uint32 n = -1);
 
 
 void SplitFilenameToProps(const char *in, std::string *fn = NULL, std::string *s1 = NULL, 

@@ -3,14 +3,15 @@
 #include "MyCrc32.h"
 #include "LZMACompressor.h"
 #include "LZOCompressor.h"
+#include "DeflateCompressor.h"
 #include "LVPAFile.h"
 #include "LVPAStreamCipher.h"
 #include "SHA256Hash.h"
-#include "ProgressBar.h"
+//#include "ProgressBar.h"
 
 
 // not the best way...
-static ProgressBar *gProgress = NULL;
+//static ProgressBar *gProgress = NULL;
 
 // these are part of the header of each file
 static const char* gMagic = LVPA_MAGIC;
@@ -19,11 +20,11 @@ static const uint32 gVersion = LVPA_VERSION;
 
 static int drawCompressProgressBar(void *, uint64 in, uint64 out)
 {
-    if(gProgress)
+    /*if(gProgress)
     {
         gProgress->done = uint32(in) / 1024; // show in kB
         gProgress->Update();
-    }
+    }*/
     return 0; // SZ_OK
 }
 
@@ -37,6 +38,9 @@ static ICompressor *allocCompressor(uint8 algo)
 
         case LVPAPACK_LZO1X:
             return new LZOCompressor;
+
+        case LVPAPACK_DEFLATE:
+            return new DeflateCompressor;
 
         case LVPAPACK_NONE:
             return new ICompressor; // does nothing
@@ -602,9 +606,9 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
     }
 
     // compressing is possibly going to take some time, better to show a progress bar
-    ProgressBar bar;
-    gProgress = &bar;
-    bar.msg = "Preparing:    ";
+    //ProgressBar bar;
+    //gProgress = &bar;
+    //bar.msg = "Preparing:    ";
 
     // apply default settings for INHERIT modes
     if(compression == LVPACOMP_INHERIT)
@@ -701,7 +705,7 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
             h.realSize = h.packedSize = h.data.size;
             _realSize += h.data.size; // for stats
             h.flags &= ~LVPAFLAG_PACKED;
-            headersCopy[h.blockId].realSize += h.realSize;
+            headersCopy[h.blockId].realSize += h.realSize + LVPA_EXTRA_BUFSIZE;
 
             // overwrite settings if not specified otherwise
             // solid blocks were done in last iteration, now adjust the remaining files
@@ -727,33 +731,36 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
         }
     }
 
-    bar.total = _realSize / 1024; // we know the total size now, show in kB
+    //bar.total = _realSize / 1024; // we know the total size now, show in kB
 
     // second iteration - allocate the buffers and reserve sizes
     for(uint32 i = 0; i < headersCopy.size(); ++i)
     {
         const LVPAFileHeader& h = headersCopy[i];
         // that indicates we need to write the file to a buffer
-        if(h.good && h.realSize && !(h.flags & LVPAFLAG_SOLID) && ((h.flags & LVPAFLAG_SOLIDBLOCK) || h.level != LVPACOMP_NONE))
+        if(h.good && !(h.flags & LVPAFLAG_SOLID) && ((h.flags & LVPAFLAG_SOLIDBLOCK) || h.level != LVPACOMP_NONE))
         {
             // each file (or solid block) can have its own compression algo, and level
             fileBufs.v[i] = allocCompressor(h.algo);
             fileBufs.v[i]->reserve(h.realSize);
         }
     }
+    uint8 solidPadding[LVPA_EXTRA_BUFSIZE];
+    memset(&solidPadding[0], 0, LVPA_EXTRA_BUFSIZE);
     // third iteration - append solid files to their blocks
     for(uint32 i = 0; i < headersCopy.size(); ++i)
     {
         LVPAFileHeader& h = headersCopy[i];
-        if(h.good && (h.flags & LVPAFLAG_SOLID) && h.realSize)
+        if(h.good && (h.flags & LVPAFLAG_SOLID))
         {
             ICompressor *solidblock = fileBufs.v[h.blockId];
             DEBUG(ASSERT(solidblock));
             solidblock->append(h.data.ptr, h.data.size);
+            solidblock->append(&solidPadding[0], LVPA_EXTRA_BUFSIZE);
         }
     }
 
-    bar.msg = "Compressing:  ";
+    //bar.msg = "Compressing:  ";
 
     // fourth iteration - append each non-solid file to its buffer, and compress each file / solid block
     // also append each header to the header compressor buf
@@ -788,9 +795,10 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
             }
 
             // encrypt? these blocks will be thrown away, so we can just directly apply encryption
-            _CryptBlock((uint8*)block->contents(), h, true);
+            if(block->size())
+                _CryptBlock((uint8*)block->contents(), h, true);
 
-            bar.PartialFix();
+            //bar.PartialFix();
 
             // for stats
             _packedSize += block->size();
@@ -860,11 +868,11 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
 
 
     // -- write everything into the container file --
-    gProgress = NULL;
-    bar.Reset();
-    bar.msg = "Writing file: ";
-    bar.total = writtenHeaders;
-    bar.Update();
+    //gProgress = NULL;
+    //bar.Reset();
+    //bar.msg = "Writing file: ";
+    //bar.total = writtenHeaders;
+    //bar.Update();
 
     // close the file if already open, to allow overwriting
     _CloseFile();
@@ -945,12 +953,12 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
             fclose(outfile);
             return false;
         }
-        ++bar.done;
-        bar.Update();
+        //++bar.done;
+        //bar.Update();
     }
 
     fclose(outfile);
-    bar.Finalize();
+    //bar.Finalize();
     return true;
 }
 
@@ -1158,7 +1166,7 @@ void LVPAFile::_CalcOffsets(uint32 startOffset)
         {
             uint32& o = solidOffsets[h.blockId];
             h.offset = o;
-            o += h.realSize;
+            o += h.realSize + LVPA_EXTRA_BUFSIZE;
             DEBUG(logdebug("Rel offset %u for '%s'", h.offset, h.filename.c_str()));
         }
         else // non-solid files or solid blocks themselves use absolute file position addressing

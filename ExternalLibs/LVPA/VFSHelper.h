@@ -2,6 +2,8 @@
 #define VFSHELPER_H
 
 #include <set>
+#include <vector>
+#include <list>
 
 class VFSDir;
 class VFSDirReal;
