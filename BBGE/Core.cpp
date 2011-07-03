@@ -3368,11 +3368,13 @@ void Core::pollEvents()
 			{
 				#if __APPLE__
 				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_META))
-				{
-					SDL_Quit();
-					_exit(0);
-				}
+				#else
+				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
 				#endif
+				{
+					quitNestedMain();
+					quit();
+				}
 
 				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
 				{
