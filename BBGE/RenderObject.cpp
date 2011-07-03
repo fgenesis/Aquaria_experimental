@@ -1392,21 +1392,18 @@ void RenderObject::setTexture(const std::string &n)
 	std::string name = n;
 	stringToLowerUserData(name);
 
-	if (name.empty()) return;
-	if (texture)
-	{
-		if (texture->name != core->getInternalTextureName(name))
-		{
-			texture->removeRef();
-			texture = 0;
-		}
-		else
-		{
-			return;
-		}
-	}
+	if (name.empty())
+        return;
+
+    if(texture && texture->name == core->getInternalTextureName(name))
+        return; // no texture change
+
+    Texture *oldtex = texture;
 	Texture *t = core->addTexture(name);
 	setTexturePointer(t, NO_ADD_REF);
+
+    if (oldtex)
+        oldtex->removeRef();
 }
 
 float RenderObject::getSortDepth()
