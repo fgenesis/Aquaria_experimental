@@ -88,8 +88,6 @@ protected:
 	// internal load functions
 	void loadPNG(const std::string &file);
 	void loadTGA(const std::string &file);
-	
-	void loadBMP(const std::string &file);
 
 	int ow, oh;
 	

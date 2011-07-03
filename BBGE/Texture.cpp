@@ -325,9 +325,8 @@ void Texture::load(std::string file)
 
 	loadName = file;
 
-	bool check = true;
-
 	size_t pos = file.find_last_of('.');
+
 	if ((pos != std::string::npos) && (pos >= 0))
 	{
 		// make sure this didn't catch the '.' in /home/username/.Aquaria/*  --ryan.
@@ -344,33 +343,18 @@ void Texture::load(std::string file)
 		debugLog(os.str());
 	}
 
-	if (!exists(file, false) && (pos == std::string::npos || pos == 0))
-	{
-		std::string originalFile = file;
-		file = originalFile + ".png";
-		//errorLog ("Trying png");
-		if (!exists(file, false))
-		{
-		//	errorLog ("trying jpg");
-			file = originalFile + ".jp2";
-			if (!exists(file, false))
-			{
-				file = originalFile;
-			}
-		}
-		else
-		{
-		//	errorLog ("png exists!");
-		}
-	}
-	else
-	{
-		check = false;
-	}
+    bool found = exists(file);
 
+    if(!found && exists(file + ".png"))
+    {
+        found = true;
+        file += ".png";
+    }
 
+    // .tga/.zga are never used as game graphics anywhere except save slot thumbnails.
+    // if so, their file names are passed exact, not with a missing extension
 
-	if ((check && exists(file.c_str(), false)) || !check)
+	if (found)
 	{
 		/*
 		std::ostringstream os;
@@ -401,10 +385,6 @@ void Texture::load(std::string file)
 				height = desc.Height;
 			}
 #endif
-		}
-		else if (post == "bmp")
-		{
-			loadBMP(file);
 		}
 		else if (post == "zga")
 		{
@@ -598,35 +578,6 @@ void Texture::loadTGA(const std::string &file)
 #endif
 }
 
-void Texture::loadBMP(const std::string &file)
-{
-	/*
-	AUX_RGBImageRec *imageBMP=0;
-
-
-
-	if (imageBMP = auxDIBImageLoad(file.c_str()))
-	{
-		glGenTextures(1, &id);
-		glBindTexture(GL_TEXTURE_2D, id);
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, imageBMP->sizeX, imageBMP->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, imageBMP->data);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,filter);	// Linear Filtering
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,filter);	// Linear Filtering
-		width = imageBMP->sizeX;
-		height = imageBMP->sizeY;
-
-	}
-	if (imageBMP)							// If Texture Exists
-	{
-		if (imageBMP->data)					// If Texture Image Exists
-		{
-			free(imageBMP->data);				// Free The Texture Image Memory
-		}
-
-		free(imageBMP);						// Free The Image Structure
-	}
-	*/
-}
 
 #define TGA_RGB		 2		// This tells us it's a normal RGB (really BGR) file
 #define TGA_A		 3		// This tells us it's a ALPHA file
