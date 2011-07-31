@@ -326,8 +326,8 @@ void Path::refreshScript()
 	{
 		pathType = PATH_CURRENT;
 		SimpleIStringStream is(name);
-		std::string label;
-		is >> label;
+		std::string dummy;
+		is >> dummy;
 		is >> currentMod;
 		is >> amount;
 		if (amount == 0)
@@ -379,8 +379,8 @@ void Path::refreshScript()
 	{
 		pathType = PATH_STEAM;
 		SimpleIStringStream is(name);
-		std::string label;
-		is >> label;
+		std::string dummy;
+		is >> dummy;
 
 		float v = 0; 
 		is >> v;
@@ -419,9 +419,11 @@ void Path::refreshScript()
 	}
 	else if (label == "warp")
 	{
-		std::string dummy;
+		std::string dummy, warpTypeStr;
 		SimpleIStringStream is(name);
-		is >> dummy >> warpMap >> warpType;
+		is >> dummy >> warpMap >> warpTypeStr;
+        // warpType is just char, which does not automatically skip spaces like strings would
+        warpType = warpTypeStr.length() ? warpTypeStr[0] : 0;
 
 		if (warpMap.find("vedha")!=std::string::npos)
 		{
@@ -448,7 +450,7 @@ void Path::refreshScript()
 	else if (label == "se")
 	{
 		std::string dummy;
-		std::istringstream is(name);
+		SimpleIStringStream is(name);
 		spawnEnemyNumber = 0;
 		spawnEnemyDistance = 0;
 		is >> dummy >> spawnEnemyName >> spawnEnemyDistance >> spawnEnemyNumber;
@@ -462,9 +464,9 @@ void Path::refreshScript()
 	}
 	else if (label == "pe")
 	{
-		std::string label, particleEffect;
-		std::istringstream is(name);
-		is >> label >> particleEffect;
+		std::string dummy, particleEffect;
+		SimpleIStringStream is(name);
+		is >> dummy >> particleEffect;
 		//core->removeRenderObject(&emitter, Core::DO_NOT_DESTROY_RENDER_OBJECT);
 		//core->getTopStateData()->addRenderObject(&emitter, LR_PARTICLES);
 
