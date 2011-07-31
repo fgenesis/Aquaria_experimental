@@ -258,7 +258,8 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 		for (int i = lastFree + 1; i <= lastUsed; i++)
 		{
 			renderObjects[i-1] = renderObjects[i];
-			renderObjects[i-1]->setIdx(i-1);
+			if(renderObjects[i-1])
+				renderObjects[i-1]->setIdx(i-1);
 		}
 
 		renderObjects[lastUsed] = r;
@@ -311,7 +312,8 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 		for (int i = newSize - 1; i >= sizeDiff; i--)
 		{
 			renderObjects[i] = renderObjects[i - sizeDiff];
-			renderObjects[i]->setIdx(i);
+			if(renderObjects[i])
+				renderObjects[i]->setIdx(i);
 		}
 		for (int i = 0; i < newIdx; i++)
 			renderObjects[i] = 0;
@@ -327,7 +329,8 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 		for (int i = firstFreeIdx; i > 0; i--)
 		{
 			renderObjects[i] = renderObjects[i-1];
-			renderObjects[i]->setIdx(i);
+			if(renderObjects[i])
+				renderObjects[i]->setIdx(i);
 		}
 		renderObjects[0] = r;
 		r->setIdx(0);
