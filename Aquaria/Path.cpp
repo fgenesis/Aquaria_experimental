@@ -286,8 +286,8 @@ void Path::parseWarpNodeData(const std::string &dataString)
 
 void Path::refreshScript()
 {
+
 	amount = 0;
-    content.clear();
 
 	// HACK: clean up
 	/*+ dsq->game->sceneName + "_"*/
@@ -297,35 +297,37 @@ void Path::refreshScript()
 
 	stringToLower(name);
 
-    std::string label;
-    {
-        SimpleIStringStream is(name);
-        is >> label >> content >> amount;
-    }
-
 	std::string scr;
 	if (dsq->mod.isActive())
-		scr = dsq->mod.getPath() + "scripts/node_" + label + ".lua";
+		scr = dsq->mod.getPath() + "scripts/node_" + name + ".lua";
 	else
-		scr = "scripts/maps/node_" + label + ".lua";
+		scr = "scripts/maps/node_" + name + ".lua";
 	if (exists(scr))
 	{
 		script = dsq->scriptInterface.openScript(scr);
 		updateFunction = activateFunction = true;
 	}
-
-	if (label == "seting")
+	std::string topLabel;
+	std::istringstream tis;
+	tis >> topLabel;
+	if (name.find("seting ") != std::string::npos)
 	{
 		pathType = PATH_SETING;
+		std::istringstream is(name);
+		std::string label;
+		is >> label >> content >> amount;
 	}
-	else if (label == "setent")
+	else if (name.find("setent ") != std::string::npos)
 	{
 		pathType = PATH_SETENT;
+		std::istringstream is(name);
+		std::string label;
+		is >> label >> content >> amount;
 	}
-	else if (label == "current")
+	else if (name.find("current") != std::string::npos)
 	{
 		pathType = PATH_CURRENT;
-		SimpleIStringStream is(name);
+		std::istringstream is(name);
 		std::string label;
 		is >> label;
 		is >> currentMod;
@@ -337,48 +339,65 @@ void Path::refreshScript()
 		if (amount > 1) amount = 1;
 		if (amount < 0) amount = 0;
 	}
-	else if (label == "gem")
+	else if (name.find("gem ") != std::string::npos)
 	{
 		pathType = PATH_GEM;
-		gem = content;
+		std::string label;
+		std::istringstream is(name);
+		is >> label >> gem;
 	}
-	else if (label == "waterbubble")
+	else if (name == "waterbubble")
 	{
 		pathType = PATH_WATERBUBBLE;
 	}
-	else if (label == "cook")
+	else if (name == "cook")
 	{
 		pathType = PATH_COOK;
 	}
-	else if (label == "zoom")
+	else if (name.find("zoom ") != std::string::npos)
 	{
 		pathType = PATH_ZOOM;
-		SimpleIStringStream is(name);
-		std::string dummy;
-		is >> dummy >> amount >> time;
+		std::istringstream is(name);
+		std::string label;
+		is >> label >> amount >> time;
 		if (time == 0)
 		{
 			time = 1;
 		}
 	}
-	else if (label == "radarhide")
+	else if (name.find("radarhide") != std::string::npos)
 	{
 		pathType = PATH_RADARHIDE;
 	}
-	else if (label == "bgsfxloop")
+	else if (name.find("bgsfxloop") != std::string::npos)
 	{
 		pathType = PATH_BGSFXLOOP;
+		std::istringstream is(name);
+		std::string label;
+		is >> label >> content;
 		core->sound->loadLocalSound(content);
 	}
 
-	else if (label == "savepoint")
+	else if (name.find("savepoint") != std::string::npos)
 	{
 		pathType = PATH_SAVEPOINT;
 	}
-	else if (label == "steam")
+	else if (topLabel == "li")
+	{
+		pathType = PATH_LI;
+
+		/*
+		pathType = PATH_LI;
+		std::istringstream is(name);
+		std::string label;
+		is >> label;
+		*/
+		//is >> expression;
+	}
+	else if (name.find("steam") != std::string::npos)
 	{
 		pathType = PATH_STEAM;
-		SimpleIStringStream is(name);
+		std::istringstream is(name);
 		std::string label;
 		is >> label;
 
@@ -387,41 +406,42 @@ void Path::refreshScript()
 		if (v != 0)
 			currentMod = v;
 	}
-	else if (label == "warpnode")
+	else if (name.find("warpnode ")!=std::string::npos)
 	{
 		parseWarpNodeData(name);
 	}
-	else if (label == "spiritportal")
+	else if (name.find("spiritportal") != std::string::npos)
 	{
-		std::string dummy;
-		SimpleIStringStream is(name);
-		is >> dummy >> warpMap >> warpNode;
+		std::string label;
+		std::istringstream is(name);
+		is >> label >> warpMap >> warpNode;
 		pathType = PATH_SPIRITPORTAL;
 	}
-	else if (label == "warplocalnode")
+	else if (name.find("warplocalnode ")!=std::string::npos)
 	{
-		std::string dummy, type;
-		SimpleIStringStream is(name);
-		is >> dummy >> warpNode >> type;
+		std::string label;
+		std::string type;
+		std::istringstream is(name);
+		is >> label >> warpNode >> type;
 		if (type == "in")
 			localWarpType = LOCALWARP_IN;
 		else if (type == "out")
 			localWarpType = LOCALWARP_OUT;
 		pathType = PATH_WARP;
 	}
-	else if (label == "vox" || label == "voice")
+	else if (name.find("vox ")!=std::string::npos || name.find("voice ")!=std::string::npos)
 	{
-		std::string dummy, re;
-		SimpleIStringStream is(name);
-		is >> dummy >> vox >> re;
+		std::string label, re;
+		std::istringstream is(name);
+		is >> label >> vox >> re;
 		if (!re.empty())
 			replayVox = true;
 	}
-	else if (label == "warp")
+	else if (name.find("warp ")!=std::string::npos)
 	{
-		std::string dummy;
-		SimpleIStringStream is(name);
-		is >> dummy >> warpMap >> warpType;
+		std::string label;
+		std::istringstream is(name);
+		is >> label >> warpMap >> warpType;
 
 		if (warpMap.find("vedha")!=std::string::npos)
 		{
@@ -445,13 +465,13 @@ void Path::refreshScript()
 		pathType = PATH_WARP;
 
 	}
-	else if (label == "se")
+	else if (name.find("se ")!=std::string::npos)
 	{
-		std::string dummy;
+		std::string label;
 		std::istringstream is(name);
 		spawnEnemyNumber = 0;
 		spawnEnemyDistance = 0;
-		is >> dummy >> spawnEnemyName >> spawnEnemyDistance >> spawnEnemyNumber;
+		is >> label >> spawnEnemyName >> spawnEnemyDistance >> spawnEnemyNumber;
 		neverSpawned = true;
 		/*
 		if (!spawnedEntity && !nodes.empty())
@@ -460,7 +480,7 @@ void Path::refreshScript()
 		}
 		*/
 	}
-	else if (label == "pe")
+	else if (name.find("pe ")!=std::string::npos)
 	{
 		std::string label, particleEffect;
 		std::istringstream is(name);
