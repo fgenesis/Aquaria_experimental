@@ -22,6 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 #include "Avatar.h"
 #include "StatsAndAchievements.h"
+#include <VFSFile.h>
+#include "lvpa/LVPATools.h"
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (sizeof (x) / sizeof ((x)[0]))
@@ -171,15 +173,38 @@ void StatsAndAchievements::RunFrame()
 		requestedStats = true;
 
 		const size_t max_achievements = ARRAYSIZE(g_rgAchievements);
+
+        // VFS related
+        std::vector<std::string> splitv;
+        char *achtxt = "";
+        ttvfs::VFSFile *vf = core->vfs.GetFile("data/achievements.txt");
+        if(vf)
+        {
+            vf->open(NULL, "r");
+            achtxt = (char*)vf->getBuf();
+            vf->close();
+            lvpa::StrSplit(achtxt, "\n", splitv, true);
+            core->addVFSFileForDrop(vf);
+        }
+
 		FILE *io = NULL;
 
 		// Get generic achievement data...
-		io = fopen("data/achievements.txt", "r");
-		char line[1024];
+		//io = fopen("data/achievements.txt", "r");
+		char linebuf[1024];
+        char *line = &linebuf[0];
+        int ctr = 0;
 		for (size_t i = 0; i < max_achievements; i++)
 		{
-			if (!io || (fgets(line, sizeof (line), io) == NULL))
-				snprintf(line, sizeof (line), "Achievement #%d", (int) i);
+            line = "";
+			//if (!io || (fgets(line, sizeof (line), io) == NULL))
+            if(ctr < splitv.size())
+                line = (char*)splitv[ctr++].c_str();
+            if(!*line)
+            {
+				snprintf(linebuf, sizeof (line), "Achievement #%d", (int) i);
+                line = &linebuf[0];
+            }
 			else
 			{
 				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
@@ -188,8 +213,15 @@ void StatsAndAchievements::RunFrame()
 			line[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
 			strcpy(g_rgAchievements[i].name, line);
 
-			if (!io || (fgets(line, sizeof (line), io) == NULL))
-				snprintf(line, sizeof (line), "[Description of Achievement #%d is missing!]", (int) i);
+            
+			//if (!io || (fgets(line, sizeof (line), io) == NULL))
+            if(ctr < splitv.size())
+                line = (char*)splitv[ctr++].c_str();
+            if(!*line)
+            {
+				snprintf(linebuf, sizeof (line), "[Description of Achievement #%d is missing!]", (int) i);
+                line = &linebuf[0];
+            }
 			else
 			{
 				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
@@ -204,6 +236,7 @@ void StatsAndAchievements::RunFrame()
 
 		if (io != NULL)
 			fclose(io);
+        
 
 		// See what this specific player has achieved...
 

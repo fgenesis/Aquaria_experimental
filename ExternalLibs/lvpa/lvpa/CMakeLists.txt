@@ -6,6 +6,8 @@ DeflateCompressor.cpp
 DeflateCompressor.h
 ICompressor.h
 LVPAFile.cpp
+LVPATools.cpp
+LVPATools.h
 ${LVPA_INCLUDE_DIRS}/LVPAFile.h 
 ${LVPA_INCLUDE_DIRS}/LVPACommon.h
 ${LVPA_INCLUDE_DIRS}/LVPACompileConfig.h
@@ -13,6 +15,8 @@ LVPAStreamCipher.cpp
 LVPAStreamCipher.h
 LZFCompressor.cpp
 LZFCompressor.h
+LZHAMCompressor.cpp
+LZHAMCompressor.h
 LZMACompressor.cpp
 LZMACompressor.h
 LZOCompressor.cpp
@@ -26,13 +30,10 @@ SHA256Hash.cpp
 SHA256Hash.h
 sha256.cpp
 sha256.h
-tools.cpp
-tools.h
 )
 
 set(LVPA_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "LVPA source dir - used for lvpak and ttvfs bindings" FORCE)
 
 add_library(lvpa ${lvpa_SRC})
 
-target_link_libraries(lvpa ${lvpa_TARGET_LIBS})
-
+target_link_libraries(lvpa ${LVPA_DEP_LIBS})

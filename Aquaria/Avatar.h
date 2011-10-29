@@ -351,9 +351,11 @@ public:
 	void loseTargets();
 
 	bool canSetBoneLock();
-	
+
 	void revert();
-	
+
+    int leaches;
+
 protected:
 	void setSongIconPositions();
 
@@ -459,7 +461,6 @@ protected:
 
 	void onEnterState(int action);
 	void onExitState(int action);
-	void onGetEXP(unsigned int exp);
 	std::vector<ParticleEffect*>targetQuads;
 	Quad *blinder, *fader, *tripper;
 	void applyBlindEffects();

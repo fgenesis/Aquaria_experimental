@@ -220,7 +220,7 @@ void stringToLower(std::string &s);
 void stringToLowerUserData(std::string &s);
 void glColor3_256(int r, int g, int b);
 float sqr(float x);
-bool exists(const std::string &f, bool makeFatal = false);
+bool exists(const std::string &f, bool makeFatal = false, bool skipVFS = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
 char *readFile(std::string path, unsigned long *size_ret = 0);
@@ -315,3 +315,4 @@ void openURL(const std::string &url);
 
 std::string underscoresToSpaces(const std::string &str);
 std::string spacesToUnderscores(const std::string &str);
+

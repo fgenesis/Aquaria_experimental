@@ -38,6 +38,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "RoundedRect.h"
 #include "TTFFont.h"
+#include "ModSelector.h"
+#include <VFSFile.h>
+#include "LVPAFile.h"
+#include "Network.h"
 
 #ifdef BBGE_BUILD_OPENGL
 	#include <sys/stat.h>
@@ -131,7 +135,7 @@ float titTimer = 0;
 const int saveSlotPageSize = 4;
 int maxPages = 7;
 #ifdef AQUARIA_BUILD_CONSOLE
-const int MAX_CONSOLELINES	= 14;
+const int MAX_CONSOLELINES	= 18;
 #endif
 
 DSQ *dsq = 0;
@@ -173,28 +177,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	almb = armb = 0;
 	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
 	
-	// do copy stuff
-#ifdef BBGE_BUILD_UNIX
-	std::string fn;
-	fn = getPreferencesFolder() + "/" + userSettingsFilename;
-	if (!exists(fn))
-		Linux_CopyTree(core->adjustFilenameCase(userSettingsFilename).c_str(), core->adjustFilenameCase(fn).c_str());
-
-	fn = getUserDataFolder() + "/_mods";
-	if (!exists(fn))
-		Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
-#endif
-
-
-#if defined(BBGE_BUILD_UNIX)
-	std::string p1 = getUserDataFolder();
-	std::string p2 = getUserDataFolder() + "/save";
-	mkdir(p1.c_str(), S_IRWXU);
-	mkdir(p2.c_str(), S_IRWXU);
-	
-	//debugLogPath = ;
-#endif
-	
 	difficulty = DIFF_NORMAL;
 
 	/*
@@ -218,7 +200,7 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	subtext = 0;
 	subbox = 0;
 	menuSelectDelay = 0;
-	modSelector = 0;
+	modSelectorScr = 0;
 	blackout = 0;
 	useMic = false;
 	autoSingMenuOpen = false;
@@ -231,9 +213,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	achievement_text = 0;
 	achievement_box = 0;
 #endif
-
-	vars = &v;
-	v.load();
 
 #ifdef AQUARIA_BUILD_CONSOLE
 	console = 0;
@@ -255,25 +234,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 
 	for (int i = 0; i < 16; i++)
 		firstElementOnLayer[i] = 0;
-
-	addStateInstance(game = new Game);
-	addStateInstance(new GameOver);
-#ifdef AQUARIA_BUILD_SCENEEDITOR
-	addStateInstance(new AnimationEditor);
-#endif
-	addStateInstance(new Intro2);
-	addStateInstance(new BitBlotLogo);
-#ifdef AQUARIA_BUILD_SCENEEDITOR
-	addStateInstance(new ParticleEditor);
-#endif
-	addStateInstance(new Credits);
-	addStateInstance(new Intro);
-	addStateInstance(new Nag);
-
-	//addStateInstance(new Logo);
-	//addStateInstance(new SCLogo);
-	//addStateInstance(new IntroText);
-	//addStateInstance(new Intro);
 
 	//stream = 0;
 }
@@ -337,6 +297,7 @@ void DSQ::rumble(float leftMotor, float rightMotor, float time)
 
 void DSQ::newGame()
 {
+    applyPatches(); // FG: FIXME: is this a good spot for this?
 	dsq->game->resetFromTitle();
 	dsq->initScene = "NaijaCave";
 	dsq->game->transitionToScene(dsq->initScene);
@@ -344,7 +305,7 @@ void DSQ::newGame()
 
 void DSQ::loadElementEffects()
 {
- 	std::ifstream inFile("data/elementeffects.txt");
+ 	VFSTextStdStreamIn inFile("data/elementeffects.txt");
 	elementEffects.clear();
 	std::string line;
 	while (std::getline(inFile, line))
@@ -378,7 +339,7 @@ void DSQ::loadElementEffects()
 		e.type = efxType;
 		elementEffects.push_back(e);
 	}
-	inFile.close();
+	//inFile.close();
 }
 
 ElementEffect DSQ::getElementEffectByIndex(int e)
@@ -598,7 +559,7 @@ void DSQ::debugMenu()
 		{
 			core->frameOutputMode = false;
 			dsq->game->togglePause(true);
-			std::string s = dsq->getUserInputString("1: Refresh\n2: Heal\n3: Reset Cont.\n5: Set Invincible\n6: Set Flag\n8: All Songs\n9: All Ups\nS: learn song #\nF: Find Entity\nC: Set Costume\n0: Learn MArea Songs\nR: Record Demo\nP: Playback Demo\nT: Rewind Demo\nU: Ouput Demo Frames\nB: Unload Resources\nA: Reload Resources\nM: AutoMap\nJ: JumpState\nQ: QuitNestedMain", "");
+			std::string s = dsq->getUserInputString("1: Refresh\n2: Heal\n3: Reset Cont.\n5: Set Invincible\n6: Set Flag\n8: All Songs\n9: All Ups\nS: learn song #\nF: Find Entity\nC: Set Costume\n0: Learn MArea Songs\nR: Record Demo\nP: Playback Demo\nT: Rewind Demo\nM: Stop Playback\nU: Output Demo Frames\nB: Unload Resources\nA: Reload Resources\nJ: JumpState\nQ: QuitNestedMain", "");
 			stringToUpper(s);
 
 			/*
@@ -786,7 +747,8 @@ void DSQ::debugMenu()
 				}
 				else if (c == 'M')
 				{
-					dsq->game->autoMap->toggle(!dsq->game->autoMap->isOn());
+					//dsq->game->autoMap->toggle(!dsq->game->autoMap->isOn());
+                    dsq->demo.togglePlayback(false);
 				}
 				else if (c == 'H')
 				{
@@ -918,6 +880,56 @@ static bool sdlVideoModeOK(const int w, const int h, const int bpp)
 
 void DSQ::init()
 {
+    setupVFS();
+
+    // -- moved here from ctor --
+    // do copy stuff
+#ifdef BBGE_BUILD_UNIX
+    std::string fn;
+    fn = getPreferencesFolder() + "/" + userSettingsFilename;
+    if (!exists(fn))
+        Linux_CopyTree(core->adjustFilenameCase(userSettingsFilename).c_str(), core->adjustFilenameCase(fn).c_str());
+
+    fn = getUserDataFolder() + "/_mods";
+    if (!exists(fn))
+        Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
+#endif
+
+
+#if defined(BBGE_BUILD_UNIX)
+    std::string p1 = getUserDataFolder();
+    std::string p2 = getUserDataFolder() + "/save";
+    mkdir(p1.c_str(), S_IRWXU);
+    mkdir(p2.c_str(), S_IRWXU);
+
+    //debugLogPath = ;
+#endif
+
+    vars = &v;
+    v.load();
+
+    addStateInstance(game = new Game);
+    addStateInstance(new GameOver);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+    addStateInstance(new AnimationEditor);
+#endif
+    addStateInstance(new Intro2);
+    addStateInstance(new BitBlotLogo);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+    addStateInstance(new ParticleEditor);
+#endif
+    addStateInstance(new Credits);
+    addStateInstance(new Intro);
+    addStateInstance(new Nag);
+
+    //addStateInstance(new Logo);
+    //addStateInstance(new SCLogo);
+    //addStateInstance(new IntroText);
+    //addStateInstance(new Intro);
+
+    // -- end moved here from ctor --
+
+
 	core->settings.runInBackground = true;
 
 	weird = 0;
@@ -981,7 +993,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	float asp = float(user.video.resx)/float(user.video.resy);
 
-	
+	/*
 	if (asp >= 1.0f && asp < 1.8f)
 	{
 	}
@@ -992,6 +1004,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 		errorLog(os.str());
 		exit(0);
 	}
+    */
 
 	setFilter(dsq_filter);
 
@@ -1099,6 +1112,9 @@ This build is not yet final, and as such there are a couple things lacking. They
 	}
 
 	user.apply();
+
+    // FG: HACK: FIXME: OMG: do this here already or what??!
+    applyPatches();
 
 	/*
 
@@ -1603,8 +1619,12 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	bindInput();
 
-	//title();
+#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
 	enqueueJumpState("BitBlotLogo");
+#else
+    continuity.reset();
+    title();
+#endif
 }
 
 void DSQ::recreateBlackBars()
@@ -2105,7 +2125,7 @@ void DSQ::toggleMuffleSound(bool toggle)
 	*/
 }
 
-void loadModsCallback(const std::string &filename, intptr_t param)
+void DSQ::loadModsCallback(const std::string &filename, intptr_t param)
 {
 	//errorLog(filename);
 	int pos = filename.find_last_of('/')+1;
@@ -2113,9 +2133,29 @@ void loadModsCallback(const std::string &filename, intptr_t param)
 	std::string name = filename.substr(pos, pos2-pos);
 	ModEntry m;
 	m.path = name;
+    m.id = dsq->modEntries.size();
+
+    TiXmlDocument d;
+    Mod::loadModXML(&d, name);
+    m.type = Mod::getTypeFromXML(d.FirstChildElement("AquariaMod"));
+
 	dsq->modEntries.push_back(m);
 
-	debugLog("Loaded ModEntry [" + m.path + "]");
+    std::stringstream ss;
+    ss << "Loaded ModEntry [" << m.path << "] -> " << m.id << "  | type " << m.type;
+
+	dsq->debugLog(ss.str());
+}
+
+void DSQ::loadModPackagesCallback(const std::string &filename, intptr_t param)
+{
+    bool ok = dsq->mountModPackage(filename);
+
+    std::stringstream ss;
+    ss << "Mount Mod Package '" << filename << "' : " << (ok ? "ok" : "FAIL");
+    dsq->debugLog(ss.str());
+
+    // they will be enumerated by the following loadModsCallback round
 }
 
 void DSQ::startSelectedMod()
@@ -2136,6 +2176,7 @@ void DSQ::startSelectedMod()
 	}
 }
 
+/*
 void DSQ::selectNextMod()
 {
 	selectedMod ++;
@@ -2143,8 +2184,8 @@ void DSQ::selectNextMod()
 	if (selectedMod >= modEntries.size())
 		selectedMod = 0;
 
-	if (modSelector)
-		modSelector->refreshTexture();
+	if (modSelectorScr->modSelector)
+		modSelectorScr->modSelector->refreshTexture();
 }
 
 void DSQ::selectPrevMod()
@@ -2154,9 +2195,10 @@ void DSQ::selectPrevMod()
 	if (selectedMod < 0)
 		selectedMod = modEntries.size()-1;
 
-	if (modSelector)
-		modSelector->refreshTexture();
+	if (modSelectorScr->modSelector)
+		modSelectorScr->modSelector->refreshTexture();
 }
+*/
 
 ModEntry* DSQ::getSelectedModEntry()
 {
@@ -2168,9 +2210,107 @@ ModEntry* DSQ::getSelectedModEntry()
 void DSQ::loadMods()
 {
 	modEntries.clear();
+
+#ifndef AQUARIA_DEMO
+
+    // force VFS to reload _mods dir
+    if(ttvfs::VFSDir *vd = vfs.GetDir("_mods"))
+    {
+        vd->load();
+        vfs.Reload();
+    }
 	
+    // first load the packages, then enumerate XMLs
+    forEachFile(mod.getBaseModPath(), ".aqmod", loadModPackagesCallback, 0);
 	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);
 	selectedMod = 0;
+#endif
+}
+
+void DSQ::applyPatches()
+{
+#ifndef AQUARIA_DEMO
+    // user wants mods, but not yet loaded
+    if(activePatches.size() && modEntries.empty())
+        loadMods();
+
+    // FG: FIXME: its a std::set, optimize access!!
+    for (std::set<std::string>::iterator it = activePatches.begin(); it != activePatches.end(); ++it)
+        for(int i = 0; i < modEntries.size(); ++i)
+            if(modEntries[i].type == MODTYPE_PATCH)
+                if(!nocasecmp(modEntries[i].path.c_str(), it->c_str()))
+                    applyPatch(modEntries[i].path);
+#endif
+}
+
+// this thing is rather heuristic... but works for normal mod paths
+// there is apparently nothing else except Textures that is a subclass of Resource,
+// thus directly using "gfx" subdir shoud be fine...
+void DSQ::refreshResourcesForPatch(const std::string& name)
+{
+    ttvfs::VFSDir *vd = dsq->vfs.GetDir(("_mods/" + name + "/gfx").c_str()); // only textures are resources, anyways
+    if(!vd)
+        return;
+
+    std::list<ttvfs::VFSDir*> left;
+    std::set<std::string> files;
+    left.push_back(vd);
+
+    do
+    {
+        vd = left.front();
+        left.pop_front();
+        for(ttvfs::DirIter it = vd->_subdirs.begin(); it != vd->_subdirs.end(); ++it)
+            left.push_back(it->second);
+
+        // texture names are like: "naija/naija2-frontleg3" - no .png extension, and no gfx/ path
+        for(ttvfs::FileIter it = vd->_files.begin(); it != vd->_files.end(); ++it)
+        {
+            std::string t = it->second->fullname();
+            size_t dotpos = t.rfind('.');
+            size_t pathstart = t.find("gfx/");
+            if(dotpos == std::string::npos || pathstart == std::string::npos || dotpos < pathstart)
+                continue; // whoops
+
+
+            std::string dbg = t.substr(pathstart + 4, dotpos - (pathstart + 4));
+            files.insert(t.substr(pathstart + 4, dotpos - (pathstart + 4)));
+        }
+    }
+    while(left.size());
+
+    for(int i = 0; i < dsq->resources.size(); ++i)
+    {
+        Resource *r = dsq->resources[i];
+        if(files.find(r->name) != files.end())
+            r->reload();
+    }
+}
+
+void DSQ::applyPatch(const std::string& name)
+{
+#ifdef AQUARIA_DEMO
+    return;
+#endif
+
+    std::string src = "_mods/";
+    src += name;
+    debugLog("Apply patch: " + src);
+    vfs.Mount(src.c_str(), "", true);
+
+    activePatches.insert(name);
+    refreshResourcesForPatch(name);
+}
+
+void DSQ::unapplyPatch(const std::string& name)
+{
+    std::string src = "_mods/";
+    src += name;
+    debugLog("Unapply patch: " + src);
+    vfs.Unmount(src.c_str(), "");
+
+    activePatches.erase(name);
+    refreshResourcesForPatch(name);
 }
 
 void DSQ::playMenuSelectSfx()
@@ -2229,6 +2369,8 @@ void DSQ::playPositionalSfx(const std::string &sfx, const Vector &position, floa
 
 void DSQ::shutdown()
 {
+    Network::shutdown();
+
 	scriptInterface.shutdown();
 	precacher.clean();
 	/*
@@ -2671,24 +2813,22 @@ bool DSQ::onPickedSaveSlot(AquariaSaveSlot *slot)
 void DSQ::nag(NagType type)
 {
 	nagType = type;
-	core->enqueueJumpState("nag");
+    quitNestedMain();
+	enqueueJumpState("nag", true, true);
 }
 
 void DSQ::doModSelect()
 {
 #ifdef AQUARIA_DEMO
-	nag(NAG_TOTITLE);
-	return;
+    nag(NAG_TOTITLE);
+    return;
 #endif
 
 	modIsSelected = false;
 
 	dsq->loadMods();
 	
-	selectedMod = user.data.lastSelectedMod;
-	
-	if (selectedMod >= modEntries.size() || selectedMod < 0)
-		selectedMod = 0;
+	selectedMod = 0;
 
 	createModSelector();
 
@@ -2702,7 +2842,6 @@ void DSQ::doModSelect()
 		
 	if (modIsSelected)
 	{
-		user.data.lastSelectedMod = selectedMod;
 		dsq->startSelectedMod();
 	}
 
@@ -2715,77 +2854,54 @@ void DSQ::doModSelect()
 
 void DSQ::createModSelector()
 {
-	blackout = new Quad;
-	blackout->color = 0;
-	blackout->autoWidth = AUTO_VIRTUALWIDTH;
-	blackout->autoHeight = AUTO_VIRTUALHEIGHT;
-	blackout->followCamera = 1;
-	blackout->position = Vector(400,300);
-	blackout->alphaMod = 0.75;
-	blackout->alpha = 0;
-	blackout->alpha.interpolateTo(1, 0.2);
-	addRenderObject(blackout, LR_MENU);
+    blackout = new Quad;
+    blackout->color = 0;
+    blackout->autoWidth = AUTO_VIRTUALWIDTH;
+    blackout->autoHeight = AUTO_VIRTUALHEIGHT;
+    blackout->followCamera = 1;
+    blackout->position = Vector(400,300);
+    blackout->alphaMod = 0.75;
+    blackout->alpha = 0;
+    blackout->alpha.interpolateTo(1, 0.2);
+    addRenderObject(blackout, LR_MENU);
 
-	menu.resize(4);
+	modSelectorScr = new ModSelectorScreen();
+    modSelectorScr->position = Vector(400,300);
+    modSelectorScr->setWidth(getVirtualWidth()); // just to be sure
+    modSelectorScr->setHeight(getVirtualHeight());
+    modSelectorScr->autoWidth = AUTO_VIRTUALWIDTH;
+    modSelectorScr->autoHeight = AUTO_VIRTUALHEIGHT;
+    modSelectorScr->init();
+    addRenderObject(modSelectorScr, LR_MENU);
+}
 
-	menu[0] = new Quad("Cancel", Vector(750,580));
-	menu[0]->followCamera = 1;
-	addRenderObject(menu[0], LR_MENU);
+bool DSQ::modIsKnown(const std::string& name)
+{
+    std::string nlower = name;
+    stringToLower(nlower);
 
+    for(int i = 0; i < dsq->modEntries.size(); ++i)
+    {
+        std::string elower = dsq->modEntries[i].path;
+        stringToLower(elower);
+        if(nlower == elower)
+            return true;
+    }
+    return false;
+}
 
-	AquariaMenuItem *a = new AquariaMenuItem();
-	//menu[0]->setLabel("Cancel");
-	a->useGlow("glow", 200, 50);
-	a->event.set(MakeFunctionEvent(DSQ,onExitSaveSlotMenu));
-	a->position = Vector(750, 580);
-	addRenderObject(a, LR_MENU);
-	menu[1] = a;
-	AquariaMenuItem *m1 = a;
+bool DSQ::mountModPackage(const std::string& pkg)
+{
+    lvpa::LVPAFile *f = new lvpa::LVPAFile;
+    if(!f->LoadFrom(pkg.c_str()))
+    {
+        debugLog("Package: Unable to load " + pkg);
+        return false;
+    }
 
-
-	a = new AquariaMenuItem();
-	a->useQuad("gui/arrow-left");
-	a->useGlow("glow", 100, 50);
-	a->useSound("Click");
-	a->event.set(MakeFunctionEvent(DSQ, selectPrevMod));
-	a->position = Vector(150, 300);
-	addRenderObject(a, LR_MENU);
-
-	menu[2] = a;
-
-	AquariaMenuItem *m2 = a;
-
-	a = new AquariaMenuItem();
-	a->useQuad("gui/arrow-right");
-	a->useGlow("glow", 100, 50);
-	a->useSound("Click");
-	a->event.set(MakeFunctionEvent(DSQ, selectNextMod));
-	a->position = Vector(650, 300);
-	addRenderObject(a, LR_MENU);
-
-	menu[3] = a;
-
-	AquariaMenuItem *m3 = a;
-
-	modSelector = new ModSelector();
-	modSelector->position = Vector(400,300);
-	modSelector->alpha = 0;
-	modSelector->alpha.interpolateTo(1, 0.4);
-	modSelector->followCamera = 1;
-	addRenderObject(modSelector, LR_MENU);
-
-	modSelector->setFocus(true);
-
-	m2->setDirMove(DIR_RIGHT, modSelector);
-	modSelector->setDirMove(DIR_RIGHT, m3);
-	modSelector->setDirMove(DIR_LEFT, m2);
-	m2->setDirMove(DIR_LEFT, modSelector);
-
-	modSelector->setDirMove(DIR_DOWN, m1);
-	m2->setDirMove(DIR_DOWN, m1);
-	m3->setDirMove(DIR_DOWN, m1);
-
-	m1->setDirMove(DIR_UP, modSelector);
+    vfs.AddContainer(f, "_mods", true, false, true);
+    debugLog("Package: Mounted " + pkg + " as data container in _mods");
+    return true;
 }
 
 void DSQ::applyParallaxUserSettings()
@@ -2805,13 +2921,14 @@ void DSQ::clearModSelector()
 		blackout = 0;
 	}
 
-	if (modSelector)
-	{
-		modSelector->setLife(1);
-		modSelector->setDecayRate(2);
-		modSelector->fadeAlphaWithLife = 1;
-		modSelector = 0;
-	}
+    if(modSelectorScr)
+    {
+        modSelectorScr->close();
+        modSelectorScr->setLife(1);
+        modSelectorScr->setDecayRate(2);
+        modSelectorScr->fadeAlphaWithLife = 1;
+        modSelectorScr = 0;
+    }
 
 	clearMenu();
 }
@@ -2934,6 +3051,8 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 
 void DSQ::title(bool fade)
 {
+    applyPatches(); // FG: FIXME: is this a good spot for this?
+
 	core->settings.runInBackground = false;
 
 	dsq->overlay->color = 0;
@@ -3225,6 +3344,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 		else if (saveSlotMode == SSM_LOAD)
 		{
 			continuity.loadFile(selectedSaveSlot->getSlotIndex());
+            applyPatches(); // FG: FIXME: is this a good spot for this?
 			dsq->game->transitionToScene(dsq->game->sceneToLoad);
 		}
 		// when gameover hits, load up this instead of that.
@@ -3770,7 +3890,7 @@ std::string DSQ::getDialogueFilename(const std::string &f)
 {
 	return "dialogue/" + languagePack + "/" + f + ".txt";
 }
-
+/*
 void DSQ::jumpToSection(std::ifstream &inFile, const std::string &section)
 {
 	if (section.empty()) return;
@@ -3794,7 +3914,7 @@ void DSQ::jumpToSection(std::ifstream &inFile, const std::string &section)
 	}
 	debugLog("could not find section [" + section + "]");
 }
-
+*/
 
 void DSQ::runGesture(const std::string &line)
 {
@@ -3847,9 +3967,9 @@ void DSQ::runGesture(const std::string &line)
 	}
 }
 
-bool DSQ::runScript(const std::string &name, const std::string &function)
+bool DSQ::runScript(const std::string &name, const std::string &function, bool ignoremissing /* = false */)
 {
-	if (!scriptInterface.runScript(name, function))
+	if (!scriptInterface.runScript(name, function, ignoremissing))
 	{
 		debugLog("Could not find script file [" + name + "]");
 	}
@@ -4546,6 +4666,8 @@ void DSQ::onUpdate(float dt)
 
 
 	lockMouse();
+
+    Network::update();
 }
 
 void DSQ::lockMouse()

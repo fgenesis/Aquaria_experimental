@@ -39,6 +39,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "StatsAndAchievements.h"
 
 #include "ToolTip.h"
+#include <VFSFile.h>
 
 std::vector<std::string> allowedMaps;
 
@@ -1075,10 +1076,7 @@ void Game::flipSceneVertical(int flipY)
 	FOR_ENTITIES(itr)
 	{
 		Entity *e = *itr;
-		if (e->flipScene)
-		{
-			flipRenderObjectVertical(e, flipY);
-		}
+		flipRenderObjectVertical(e, flipY);
 	}
 	int i = 0;
 	int flipTY = (flipY/TILE_SIZE)-1;
@@ -2090,7 +2088,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			}
 		}
 
-		glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
 		if (data)
 			free(data);
 		int rot = q->rotation.z;
@@ -2516,7 +2514,7 @@ void Game::loadEntityTypeList()
 // and group list!
 {
 	entityTypeList.clear();
-	std::ifstream in("scripts/entities/entities.txt");
+	VFSTextStdStreamIn in("scripts/entities/entities.txt");
 	std::string line;
 	if(!in)
 	{
@@ -2538,7 +2536,7 @@ void Game::loadEntityTypeList()
 		*/
 		entityTypeList.push_back(EntityClass(name, 1, idx, prevGfx, scale));
 	}
-	in.close();
+	//in.close();
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 	entityGroups.clear();
@@ -2549,7 +2547,7 @@ void Game::loadEntityTypeList()
 		fn = dsq->mod.getPath() + "entitygroups.txt";
 	}
 
-	std::ifstream in2(fn.c_str());
+	VFSTextStdStreamIn in2(fn.c_str());
 
 	int curGroup=0;
 	while (std::getline(in2, line))
@@ -2576,7 +2574,7 @@ void Game::loadEntityTypeList()
 			entityGroups[curGroup].entities.push_back(ent);
 		}
 	}
-	in2.close();
+	//in2.close();
 
 	game->sceneEditor.entityPageNum = 0;
 	//game->sceneEditor.page = entityGroups.begin();
@@ -2610,7 +2608,7 @@ int Game::getIdxForEntityType(std::string type)
 	return -1;
 }
 
-Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, BehaviorType bt, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
 {
 	std::string type;
 	for (int i = 0; i < dsq->game->entityTypeList.size(); i++)
@@ -2619,7 +2617,7 @@ Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool creat
 		if (ec->idx == idx)
 		{
 			type = ec->name;
-			return createEntity(type, id, position, rot, createSaveData, name, et, bt, nodeGroups, gid, doPostInit);
+			return createEntity(type, id, position, rot, createSaveData, name, et, nodeGroups, gid, doPostInit);
 		}
 	}
 	return 0;
@@ -2658,7 +2656,7 @@ void Game::ensureLimit(Entity *e, int num, int state)
 	}
 }
 
-Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, BehaviorType bt, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
 {
 	// e->layer must be set BEFORE calling this function!
 
@@ -2731,17 +2729,17 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	return e;
 }
 
-Entity *Game::createEntity(const std::string &t, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, BehaviorType bt, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity *Game::createEntity(const std::string &t, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
 {
 	std::string type = t;
 	stringToLower(type);
 
 	ScriptedEntity *e;
 
-	e = new ScriptedEntity(type, position, et, bt);
+	e = new ScriptedEntity(type, position, et);
 
 
-	return establishEntity(e, id, position, rot, createSaveData, name, et, bt, nodeGroups, gid, doPostInit);
+	return establishEntity(e, id, position, rot, createSaveData, name, et, nodeGroups, gid, doPostInit);
 }
 
 void Game::initEntities()
@@ -3072,7 +3070,7 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s, const Path *
 	for (int i = 0; i < dsq->game->paths.size(); i++)
 	{
 		Path *cp = dsq->game->paths[i];
-		if (cp != ignore && !cp->nodes.empty() && (st.empty() || st == cp->name))
+		if (cp != ignore && !cp->nodes.empty() && (st.empty() || st == cp->label))
 		{
 			const Vector v = cp->nodes[0].position - pos;
 			const float dist = v.getSquaredLength2D();
@@ -3118,7 +3116,7 @@ Path *Game::getPathByName(std::string name)
 	stringToLowerUserData(name);
 	for (int i = 0; i < paths.size(); i++)
 	{
-		if (paths[i]->name == name)
+		if (paths[i]->label == name)
 			return paths[i];
 	}
 	return 0;
@@ -5289,7 +5287,7 @@ bool Game::loadSceneXML(std::string scene)
 					}
 				}
 
-				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, ng, groupID);
+				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, ng, groupID);
 				// setting group ID
 			}
 		}
@@ -5302,7 +5300,7 @@ bool Game::loadSceneXML(std::string scene)
 			{
 				is >> x >> y >> rot >> groupID >> id;
 
-				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, 0, groupID);
+				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
 				// setting group ID
 			}
 		}
@@ -5320,9 +5318,9 @@ bool Game::loadSceneXML(std::string scene)
 				is >> x >> y >> rot >> groupID >> id;
 
 				if (!name.empty())
-					dsq->game->createEntity(name, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, 0, groupID);
+					dsq->game->createEntity(name, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
 				else
-					dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, BT_NORMAL, 0, groupID);
+					dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
 				// setting group ID
 			}
 		}
@@ -5403,7 +5401,7 @@ void Game::findMaxCameraValues()
 
 void Game::setWarpAreaSceneName(WarpArea &warpArea)
 {
-	std::ifstream in("data/warpAreas.txt");
+	VFSTextStdStreamIn in("data/warpAreas.txt");
 	std::string color, area1, dir1, area2, dir2;
 	std::string line;
 	while (std::getline(in, line))
@@ -6373,6 +6371,7 @@ void Game::applyState()
 	}
 
 	dsq->collectScriptGarbage();
+    dsq->vfs.ClearGarbage();
 
 	isCooking = false;
 	enqueuedPreviewRecipe = 0;
@@ -6445,7 +6444,7 @@ void Game::applyState()
 	dsq->overlay->color = 0;
 
 
-	for (i = LR_ELEMENTS1; i <= LR_ELEMENTS12; i++)
+	for (i = LR_ELEMENTS1; i <= LR_ELEMENTS16; i++)
 	{
 		dsq->game->setElementLayerVisible(i-LR_ELEMENTS1, true);
 	}
@@ -6456,7 +6455,7 @@ void Game::applyState()
 	cameraConstrained = true;
 	// reset parallax
 	RenderObjectLayer *l = 0;
-	for (i = LR_ELEMENTS10; i <= LR_ELEMENTS12; i++)
+	for (i = LR_ELEMENTS10; i <= LR_ELEMENTS16; i++)
 	{
 		l = &dsq->renderObjectLayers[i];
 		l->followCamera = 0;
@@ -6986,8 +6985,10 @@ void Game::applyState()
 
 	core->sort();
 
-
-	dsq->runScript("scripts/maps/premap_"+sceneName+".lua", "init");
+	if (dsq->mod.isActive())
+		dsq->runScript(dsq->mod.getPath() + "scripts/premap_" + sceneName + ".lua", "init", true);
+	else
+		dsq->runScript("scripts/maps/premap_"+sceneName+".lua", "init", true);
 
 	std::string musicToPlay = this->musicToPlay;
 	if (!overrideMusic.empty())
@@ -7079,7 +7080,10 @@ void Game::applyState()
 	dsq->subtitlePlayer.show(0.25);
 
 	if (verbose) debugLog("loading map init script");
-	dsq->runScript("scripts/maps/map_"+sceneName+".lua", "init");
+	if (dsq->mod.isActive())
+		dsq->runScript(dsq->mod.getPath() + "scripts/map_" + sceneName + ".lua", "init", true);
+	else
+		dsq->runScript("scripts/maps/map_"+sceneName+".lua", "init", true);
 
 	if (!dsq->doScreenTrans && (dsq->overlay->alpha != 0 && !dsq->overlay->alpha.isInterpolating()))
 	{
@@ -7812,7 +7816,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		Vector p = controlHint_mouseLeft->position + Vector(-100,0);
 
 		os.seekp(0);
-		os << "song/songslot-" << dsq->continuity.getSongSlotByType(songType);
+		os << "song/songslot-" << dsq->continuity.getSongSlotByType(songType) << '\0'; // be sure its terminated
 		Quad *q = new Quad(os.str(), p);
 		q->followCamera = 1;
 		q->scale = Vector(0.7, 0.7);
@@ -7827,7 +7831,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 			int note = song->notes[i];
 
 			os.seekp(0);
-			os << "song/notebutton-" << note;
+			os << "song/notebutton-" << note << '\0'; // be sure its terminated
 			Quad *q = new Quad(os.str(), p);
 			q->color = dsq->getNoteColor(note)*0.5f + Vector(1, 1, 1)*0.5f;
 			q->followCamera = 1;
@@ -7933,9 +7937,9 @@ void Game::onFlipTest()
 
 void appendFileToString(std::string &string, const std::string &file)
 {
-	std::ifstream inf(file.c_str());
+    VFSTextStdStreamIn inf(file.c_str());
 
-	if (inf.is_open())
+	if (inf)
 	{
 		while (!inf.eof())
 		{
@@ -7949,7 +7953,7 @@ void appendFileToString(std::string &string, const std::string &file)
 		}
 	}
 
-	inf.close();
+	//inf.close();
 }
 
 void Game::onToggleHelpScreen()
@@ -8740,120 +8744,6 @@ void Game::handleShotCollisionsHair(Entity *e, int num)
 			}
 		}
 	}
-}
-
-CollideData Game::collideCircleWithAllEntities(Vector pos, float r, Entity *me, int spellType, bool checkAvatarFlag)
-{
-	CollideData c;
-	//if (me && (checkHitEntitiesFlag && !me->hitEntity)) return 0;
-	//Avatar *a = dynamic_cast<Avatar*>(me);
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-
-		if (me != e)
-		{
-			bool okay = true;
-			if (okay)
-			{
-				if (spellType == 0)
-				{
-					Bone *closest = 0;
-					float smallestDist = HUGE_VALF;
-					for (int i = 0; i < e->skeletalSprite.bones.size(); i++)
-					{
-						Bone *b = e->skeletalSprite.bones[i];
-						Vector bonePos = b->getWorldCollidePosition();
-						float dist = (bonePos - pos).getSquaredLength2D();
-						if (!b->collisionMask.empty() && b->alpha.x == 1)
-						{
-							if (dist < sqr(r + b->collisionMaskRadius))
-							{
-								for (int i = 0; i < b->transformedCollisionMask.size(); i++)
-								{
-									//Vector collide = b->transformedCollisionMask[i];
-
-									// only do this work once per frame
-
-									//Vector bitPos = b->getWorldCollidePosition(collide);
-									Vector bitPos = b->transformedCollisionMask[i];
-									dist = (bitPos - pos).getSquaredLength2D();
-									if (dist < sqr(r+b->collideRadius))
-									{
-										closest = b;
-										smallestDist = dist;
-										break;
-									}
-								}
-							}
-						}
-						else if (b->collideRadius && b->alpha.x == 1)
-						{
-							//Vector bonePos = b->getWorldCollidePosition();
-							//float dist = (bonePos - pos).getSquaredLength2D();
-							if (dist < sqr(r+b->collideRadius))
-							{
-								if (dist < smallestDist)
-								{
-									closest = b;
-									smallestDist = dist;
-								}
-							}
-						}
-					}
-					if (!closest)
-					{
-						if ((e->position - pos).getSquaredLength2D() < sqr(r+e->collideRadius))
-						{
-							c.entity = e;
-							if (e->pushAvatar)
-							{
-								c.pushVector = pos - e->position;
-								c.pushVector.normalize2D();
-							}
-							if (e->touchDamage)
-							{
-								c.damage = e->touchDamage;
-							}
-							///c.pushVector |= 500;
-							c.collision = true;
-							return c;
-						}
-					}
-					else
-					{
-						//debugLog("boneCollision!");
-						c.entity = e;
-						if (e->pushAvatar)
-						{
-							c.pushVector = pos - e->position;
-							c.pushVector.normalize2D();
-						}
-						//c.pushVector |= 500;
-						c.bone = closest;
-						if (c.bone->touchDamage!=0)
-						{
-							c.damage = c.bone->touchDamage;
-						}
-						else if (e->touchDamage!=0)
-						{
-							/*
-							std::ostringstream os;
-							os << "entity touch damage: " << e->touchDamage;
-							debugLog(os.str());
-							*/
-							c.damage = e->touchDamage;
-						}
-
-
-						c.collision = true;
-						return c;
-					}
-				}
-			}
-		}
-	}
-	return c;
 }
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR
@@ -10596,7 +10486,7 @@ void Game::update(float dt)
 				if (sqrLen < sqr(e->activationRadius)
 					&& (avatar->position-e->position).getSquaredLength2D() < sqr(e->activationRange)
 					&& e->activationType == Entity::ACT_CLICK
-					&& (e->canTalkWhileMoving || !e->position.isInterpolating())
+					&& !e->position.isInterpolating()
 					)
 				{
 					//if (trace(avatar->position, e->position))
@@ -10945,7 +10835,7 @@ void Game::loadElementTemplates(std::string pack)
 		tileCache.clean();
 	}
 
-	std::ifstream in(fn.c_str());
+	VFSTextStdStreamIn in(fn.c_str());
 	std::string line;
 	while (std::getline(in, line))
 	{
@@ -10964,7 +10854,7 @@ void Game::loadElementTemplates(std::string pack)
 		if (doPrecache)
 			tileCache.precacheTex(gfx);
 	}
-	in.close();
+	//in.close();
 
 	for (int i = 0; i < elementTemplates.size(); i++)
 	{

@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ogg/ogg.h"
 #include "vorbis/vorbisfile.h"
 
+#include <VFSFile.h>
+
 #ifndef _DEBUG
 //#define _DEBUG 1
 #endif
@@ -53,7 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class OggDecoder {
 public:
     // Create a decoder that streams from a file.
-    OggDecoder(FILE *fp);
+    //OggDecoder(FILE *fp); // VFS related -- FIXME
 
     // Create a decoder that streams from a memory buffer.
     OggDecoder(const void *data, long data_size);
@@ -156,7 +158,8 @@ static const ov_callbacks ogg_memory_callbacks = {
 };
 
 
-OggDecoder::OggDecoder(FILE *fp)
+// VFS related -- FIXME: make FILE* accessible from ttvfs::VFSFile* if present
+/*OggDecoder::OggDecoder(FILE *fp)
 {
     for (int i = 0; i < NUM_BUFFERS; i++)
     {
@@ -175,7 +178,7 @@ OggDecoder::OggDecoder(FILE *fp)
     this->loop = false;
     this->eof = false;
     this->samples_done = 0;
-}
+}*/
 
 OggDecoder::OggDecoder(const void *data, long data_size)
 {
@@ -517,7 +520,7 @@ static ALenum GVorbisFormat = AL_NONE;
 class OpenALSound
 {
 public:
-    OpenALSound(FILE *_fp, const bool _looping);
+    //OpenALSound(FILE *_fp, const bool _looping);
     OpenALSound(void *_data, long _size, const bool _looping);
     FILE *getFile() const { return fp; }
     const void *getData() const { return data; }
@@ -534,6 +537,7 @@ private:
     int refcount;
 };
 
+/*
 OpenALSound::OpenALSound(FILE *_fp, const bool _looping)
     : fp(_fp)
     , data(NULL)
@@ -542,6 +546,7 @@ OpenALSound::OpenALSound(FILE *_fp, const bool _looping)
     , refcount(1)
 {
 }
+*/
 
 OpenALSound::OpenALSound(void *_data, long _size, const bool _looping)
     : fp(NULL)
@@ -670,9 +675,9 @@ bool OpenALChannel::start(OpenALSound *sound)
 {
     if (decoder)
 	delete decoder;
-    if (sound->getFile())
-	decoder = new OggDecoder(sound->getFile());
-    else
+    //if (sound->getFile())
+	//decoder = new OggDecoder(sound->getFile());
+    //else
 	decoder = new OggDecoder(sound->getData(), sound->getSize());
     if (!decoder->start(sid, sound->isLooping()))
     {
@@ -1053,6 +1058,19 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
     if (ptr) *ptr = '\0';
     strcat(fname, ".ogg");
 
+    ttvfs::VFSFile *vf = core->vfs.GetFile(fname);
+    if(!vf)
+        return FMOD_ERR_INTERNAL;
+
+    vf->getBuf(); // force size detection
+    void *data = malloc(vf->size()); // because release() will use free() ...
+    memcpy(data, vf->getBuf(), vf->size());
+    core->addVFSFileForDrop(vf);
+    *sound = (Sound *) new OpenALSound(data, vf->size(), (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+    retval = FMOD_OK;
+
+
+    /*
     // just in case...
     #undef fopen
     FILE *io = fopen(core->adjustFilenameCase(fname).c_str(), "rb");
@@ -1094,7 +1112,7 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
 
         *sound = (Sound *) new OpenALSound(data, size, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
         retval = FMOD_OK;
-    }
+    }*/
 
     return retval;
 }

@@ -56,8 +56,10 @@ VFS_NAMESPACE_START
     typedef unsigned int           vfspos;
 #endif
 
+// simple guard wrapper, works also if VFS_THREADSAFE is not defined
 #define VFS_GUARD(obj) VFS_NAMESPACE_IMPL Guard __vfs_stack_guard((obj)->mutex())
 
+// defines for optional auto-locking; only if VFS_THREADSAFE is defined
 #ifdef VFS_THREADSAFE
 #    define VFS_GUARD_OPT(obj) VFS_GUARD(obj)
 #else

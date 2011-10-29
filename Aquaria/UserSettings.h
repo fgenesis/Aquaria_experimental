@@ -159,10 +159,9 @@ public:
 
 	struct Data
 	{
-		Data() { savePage=0; saveSlot=0; lastSelectedMod=0; }
+		Data() { savePage=0; saveSlot=0; }
 		int savePage;
 		int saveSlot;
-		int lastSelectedMod;
 	} data;
 
 	struct Version
@@ -171,6 +170,13 @@ public:
 		int settingsVersion;
 	} version;
 
+#ifndef AQUARIA_DEMO
+    struct Network
+    {
+        Network() { masterServer = "fg.kicks-ass.org/aq/mods.xml"; } // FG: TODO FIXME
+        std::string masterServer;
+    } network;
+#endif
 	void loadDefaults(bool doApply=true);
 	void load(bool doApply=true, const std::string &overrideFile="");
 	void save();

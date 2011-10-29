@@ -11,6 +11,7 @@ VFS_NAMESPACE_START
 int Atomic_Incr(volatile int &i);
 int Atomic_Decr(volatile int &i);
 
+// generic Mutex class, needs to be reentrant/recursive.
 class Mutex
 {
 public:

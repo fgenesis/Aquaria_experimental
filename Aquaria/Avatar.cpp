@@ -3175,6 +3175,7 @@ void Avatar::formAbility(int ability)
 			q->scale = Vector(0,0);
 			q->scale.interpolateTo(Vector(2,2), 0.1);
 			dsq->game->addRenderObject(q, LR_ELEMENTS13);
+            q->moveToFront(); // hackish: be sure the glow is over the darkness on the map
 
 			FOR_ENTITIES(i)
 			{
@@ -4553,6 +4554,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	pullTarget = 0;
 	revertTimer = 0;
 	currentSongIdx = -1;
+    leaches = 0;
 
 
 	debugLog("Avatar vars->");
@@ -5985,11 +5987,6 @@ int Avatar::getBeamWidth()
 		c++;
 	}
 	return c * TILE_SIZE;
-}
-
-void Avatar::onGetEXP(unsigned int exp)
-{
-	dsq->continuity.exp += exp;
 }
 
 void Avatar::onEnterState(int action)

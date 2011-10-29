@@ -79,7 +79,7 @@ public:
 	void songNote(int note);
 	void songNoteDone(int note, float len);
 	bool hasScript();
-	std::string name;
+	std::string name, label;
 	std::vector<PathNode>nodes;
 	void removeNode(int idx);
 	void addNode(int idx);

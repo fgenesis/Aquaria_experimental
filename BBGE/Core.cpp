@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Particles.h"
 
 #include <time.h>
+#include <iostream>
 
 #ifdef BBGE_BUILD_UNIX
 #include <limits.h>
@@ -852,15 +853,19 @@ void Core::debugLog(const std::string &s)
 {
 	if (debugLogActive)
 	{
-		static std::ofstream out((debugLogPath + "debug.log").c_str());
-		out << s << std::endl;	
+		_logOut << s << std::endl;	
 	}
+//#ifdef _DEBUG
+    std::cout << s << std::endl;
+//#endif
 }
 
 const float SORT_DELAY = 10;
 Core::Core(const std::string &filesystem, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
 {
+    _logOut.open((debugLogPath + "debug.log").c_str());
+    sound = NULL;
 	screenCapScale = Vector(1,1,1);
 	timeUpdateType = TIMEUPDATE_DYNAMIC;
 
@@ -892,6 +897,7 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	mkdir(prefpath.c_str(), 0700);
 #else
 	debugLogPath = "";
+    userDataFolder = "."; // FG: DOES THIS EVEN WORK??
 #endif
 	
 	debugLogActive = true;
@@ -1144,6 +1150,7 @@ std::string Core::adjustFilenameCase(const char *_buf)
 
 Core::~Core()
 {
+    
 	if (particleManager)
 	{
 		delete particleManager;
@@ -1153,6 +1160,8 @@ Core::~Core()
 		delete sound;
 		sound = 0;
 	}
+    debugLog("~Core()");
+    _logOut.close();
 	core = 0;
 }
 
@@ -2073,7 +2082,7 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 
 void Core::quit()
 {
-	enqueueJumpState("STATE_QUIT");
+	enqueueJumpState("STATE_QUIT", true, true);
 	//loopDone = true;
 	//popAllStates();
 }
@@ -2766,12 +2775,12 @@ std::string Core::getEnqueuedJumpState()
 }
 
 int screenshotNum = 0;
-std::string getScreenshotFilename()
+std::string getScreenshotFilename(const char *ext)
 {
 	while (true)
 	{
 		std::ostringstream os;
-		os << core->getUserDataFolder() << "/screenshots/screen" << screenshotNum << ".tga";
+		os << core->getUserDataFolder() << "/screenshots/screen" << screenshotNum << '.' << ext;
 		screenshotNum ++;
         std::string str(os.str());
 		if (!core->exists(str))  // keep going until we hit an unused filename.
@@ -3119,7 +3128,7 @@ void Core::main(float runTime)
 
 			doScreenshot = false;
 
-			saveScreenshotTGA(getScreenshotFilename());
+			saveScreenshotTGA(getScreenshotFilename("tga"));
 			prepScreen(0);
 		}
 		
@@ -3368,13 +3377,17 @@ void Core::pollEvents()
 			{
 				#if __APPLE__
 				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_META))
-				#else
-				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
-				#endif
 				{
-					quitNestedMain();
-					quit();
+					SDL_Quit();
+					_exit(0);
 				}
+				#else
+                if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
+                {
+                    quitNestedMain();
+                    quit();
+                }
+                #endif
 
 				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
 				{
@@ -3451,8 +3464,8 @@ void Core::pollEvents()
 			break;
 
 			case SDL_QUIT:
-				SDL_Quit();
-				_exit(0);
+                quitNestedMain();
+                quit();
 				//loopDone = true;
 				//quit();
 			break;
@@ -4186,6 +4199,10 @@ void Core::shutdown()
 		SDL_Quit();
 	debugLog("OK");
 #endif
+
+    debugLog("Unloading VFS...");
+    vfs.Clear();
+    debugLog("OK");
 }
 
 //util funcs
@@ -4201,7 +4218,9 @@ void Core::instantQuit()
 
 bool Core::exists(const std::string &filename)
 {
-	if (filename.empty()) return false;
+    return ::exists(filename, false); // defined in Base.cpp
+	
+    /*
 	FILE *file;
 	file=fopen(adjustFilenameCase(filename).c_str(),"r");
 
@@ -4212,6 +4231,7 @@ bool Core::exists(const std::string &filename)
 	}
 	else
 		return false;
+    */
 }
 
 Resource* Core::findResource(const std::string &name)
@@ -4531,6 +4551,32 @@ void Core::clearGarbage()
 
 		i++;
 	}
+
+    // delete leftover buffers from VFS
+    for(std::set<ttvfs::VFSFile*>::iterator it = vfsFilesToClear.begin(); it != vfsFilesToClear.end(); ++it)
+    {
+        (*it)->dropBuf(true);
+        (*it)->ref--;
+    }
+    vfsFilesToClear.clear();
+}
+
+void Core::addVFSFileForDrop(ttvfs::VFSFile *vf)
+{
+    // HACK: because of save/poot.tmp caching and other stuff, we have to clear this always
+    // TODO: after getting rid of pack/unpackFile, this will be safer and can be done properly
+    if(strstr(vf->name(), "poot") || strstr(vf->name(), ".tmp"))
+    {
+        vf->dropBuf(true);
+        return;
+    }
+
+    std::set<ttvfs::VFSFile*>::iterator it = vfsFilesToClear.find(vf);
+    if(it == vfsFilesToClear.end())
+    {
+        vf->ref++;
+        vfsFilesToClear.insert(vf);
+    }
 }
 
 bool Core::canChangeState()
@@ -4780,6 +4826,7 @@ int Core::tgaSave(	const char	*filename,
 // open file and check for errors
 	file = fopen(adjustFilenameCase(filename).c_str(), "wb");
 	if (file == NULL) {
+        delete [] imageData;
 		return (int)false;
 	}
 
@@ -4805,6 +4852,7 @@ int Core::tgaSave(	const char	*filename,
 		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1)
 	{
 		fclose(file);
+        delete [] imageData;
 		return (int)false;
 	}
 
@@ -4821,10 +4869,12 @@ int Core::tgaSave(	const char	*filename,
 			width * height * mode, file) != width * height * mode)
 	{
 		fclose(file);
+        delete [] imageData;
 		return (int)false;
 	}
 
 	fclose(file);
+    delete [] imageData;
 
 	return (int)true;
 }
@@ -4861,3 +4911,63 @@ int Core::tgaSaveSeries(char		*filename,
 //	ilutGLScreenie();
  }
 
+#include "LVPAFile.h" // HACK: for _hackfixes.lvpa
+
+static void _DumpVFS(const std::string a)
+{
+    std::string fn = "vfsdump-" + a + ".txt";
+    std::ofstream out(fn.c_str());
+    core->vfs.debugDumpTree(out);
+    out.close();
+}
+
+void Core::setupVFS(const char *extradir /* = NULL */)
+{
+    debugLog("Init VFS...");
+    vfs.LoadFileSysRoot();
+    vfs.Prepare();
+
+#ifdef _DEBUG
+    _DumpVFS("begin");
+#endif
+
+
+#ifndef AQUARIA_DEMO
+    // FIXME: TEMP: - for test & debug versions.
+
+    bool gotfix = false;
+    if(exists("_hackfixes.lvpa"))
+    {
+        lvpa::LVPAFile *patch = new lvpa::LVPAFile;
+        if(patch->LoadFrom("_hackfixes.lvpa"))
+        {
+            vfs.AddContainer(patch, "", true, false, true);
+            gotfix = true;
+        }
+        else
+            delete patch;
+    }
+    //if(!gotfix)
+    //    errorLog("WARNING: _hackfixes.lvpa not found or corrupt, this will likely screw up this experimental version!");
+
+    //vfs.Mount("_patch", "_mods", true); // TEMP: until i organize my file system.
+#endif
+
+    if(extradir)
+    {
+        std::string msg("VFS extra dir: ");
+        msg += extradir;
+        debugLog(msg);
+        if(vfs.GetDir(extradir))
+            vfs.Mount(extradir, "");
+        else
+            vfs.MountExternalPath(extradir, "");
+        debugLog("extra dir added.");
+    }
+    debugLog("VFS init done!");
+
+    // DEBUG
+#ifdef _DEBUG
+    _DumpVFS("done");
+#endif
+}

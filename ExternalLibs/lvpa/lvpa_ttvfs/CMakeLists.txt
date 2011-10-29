@@ -9,8 +9,8 @@ else()
 endif()
 
 # required for the test program
-if(BUILD_TESTPROG AND NOT TTVFS_SRC_DIR)
-    set(TTVFS_SRC_DIR "" CACHE FILEPATH "ttvfs source directory" FORCE)
+if(LVPA_BUILD_TESTPROG AND NOT TTVFS_SRC_DIR)
+    set(TTVFS_SRC_DIR "" CACHE PATH "ttvfs source directory" FORCE)
 endif()
 
 include_directories(${TTVFS_INCLUDE_DIRS})
@@ -22,7 +22,7 @@ VFSDirLVPA.h
 VFSFileLVPA.cpp
 VFSFileLVPA.h
 VFSHelperLVPA.cpp
-${LVPA_INCLUDE_DIRS}/VFSHelperLVPA.h
+VFSHelperLVPA.h
 VFSLoaderLVPA.cpp
 VFSLoaderLVPA.h
 )

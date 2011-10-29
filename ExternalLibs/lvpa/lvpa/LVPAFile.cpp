@@ -24,6 +24,9 @@
 #ifdef LVPA_SUPPORT_LZF
 #  include "LZFCompressor.h"
 #endif
+#ifdef LVPA_SUPPORT_LZHAM
+#  include "LZHAMCompressor.h"
+#endif
 
 LVPA_NAMESPACE_START
 
@@ -67,6 +70,10 @@ static ICompressor *allocCompressor(uint8 algo)
 #ifdef LVPA_SUPPORT_LZMA
         case LVPAPACK_LZMA:
             return new LZMACompressor;
+#endif
+#ifdef LVPA_SUPPORT_LZHAM
+        case LVPAPACK_LZHAM:
+            return new LZHAMCompressor;
 #endif
         case LVPAPACK_NONE:
             return new ICompressor; // does nothing
@@ -399,15 +406,21 @@ bool LVPAFile::Free(const char *fn)
 bool LVPAFile::Free(uint32 id)
 {
     LVPAFileHeader& hdrRef = _headers[id];
-    hdrRef.sparePtr = NULL; // now its definitely not used anymore.
+    bool freed = false;
     if(hdrRef.data.ptr && !hdrRef.otherMem)
     {
         delete [] hdrRef.data.ptr;
-        hdrRef.data.ptr = NULL;
-        hdrRef.data.size = 0;
-        return true;
+        freed = true;
     }
-    return false;
+
+    if(freed || !(hdrRef.flags & LVPAFLAG_SOLIDBLOCK))
+    {
+        hdrRef.data.ptr = NULL; // can be retrieved easily if needed later
+        hdrRef.data.size = 0;
+    }
+
+    hdrRef.sparePtr = NULL; // now its definitely not used anymore.
+    return freed;
 }
 
 uint32 LVPAFile::FreeUnused(void)
@@ -1040,6 +1053,14 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
     return true;
 }
 
+static bool _memnull(void *buf, uint32 size)
+{
+    for(uint32 i = 0; i < size; ++i)
+        if(((const char*)buf)[i] != 0)
+            return false;
+    return true;
+}
+
 memblock LVPAFile::_PrepareFile(LVPAFileHeader& h, bool checkCRC /* = true */)
 {
     // h.good is set to false if there was a previous attempt to load the file that failed irrecoverably
@@ -1098,14 +1119,24 @@ memblock LVPAFile::_PrepareFile(LVPAFileHeader& h, bool checkCRC /* = true */)
     }
 
     // optionally check CRC32 of the unpacked data
-    // -- for uncompressed files, this is the only chance to find out whether the decryption key was correct
-    if(checkCRC && CRC32::Calc(h.data.ptr, h.data.size) != h.crcReal)
+    // -- for encrypted files, this is the only chance to find out whether the decryption key was correct
+    // -- solid blocks can be skipped because the individual files are checksummed on their own
+    if(checkCRC && !h.checkedCRC && !(h.flags & LVPAFLAG_SOLIDBLOCK))
     {
-        logerror("CRC mismatch for unpacked '%s', file is corrupt, or decrypt fail", h.filename.c_str());
-        if(!(h.flags & LVPAFLAG_ENCRYPTED))
-            h.good = false; // if its not encrypted, there is nothing that could fix this
-        return memblock();
+        h.checkedCRC = true;
+        uint32 crc = CRC32::Calc(h.data.ptr, h.data.size);
+        if(crc != h.crcReal)
+        {
+            logerror("CRC mismatch for unpacked '%s', file is corrupt, or decrypt fail", h.filename.c_str());
+            if(h.flags & LVPAFLAG_ENCRYPTED)
+                h.checkedCRC = false; // encrypted but failed, maybe the key was wrong, allow re-check
+            else
+                h.good = false; // if its not encrypted, there is nothing that could fix this
+            return memblock();
+        }
     }
+
+    DEBUG(ASSERT(_memnull(h.data.ptr + h.data.size, LVPA_EXTRA_BUFSIZE)));
 
     return h.data;
 }
@@ -1146,12 +1177,19 @@ memblock LVPAFile::_UnpackFile(LVPAFileHeader& h)
     if(buf)
     {
         // check CRC32 of the packed data
-        if(CRC32::Calc(target.ptr, target.size) != h.crcPacked)
+        if(!h.checkedCRCPacked)
         {
-            logerror("CRC mismatch for packed '%s', file is corrupt, or decrypt fail", h.filename.c_str());
-            if(!(h.flags & LVPAFLAG_ENCRYPTED))
-                h.good = false; // if its not encrypted, there is nothing that could fix this
-            return memblock();
+            h.checkedCRCPacked = true;
+            uint32 crc = CRC32::Calc(target.ptr, target.size);
+            if(crc != h.crcPacked)
+            {
+                logerror("CRC mismatch for packed '%s', file is corrupt, or decrypt fail", h.filename.c_str());
+                if(h.flags & LVPAFLAG_ENCRYPTED)
+                    h.checkedCRCPacked = false; // encrypted but failed, maybe the key was wrong, allow re-check
+                else
+                    h.good = false; // if its not encrypted, there is nothing that could fix this
+                return memblock();
+            }
         }
 
         buf->Compressed(true); // tell the buf that it is compressed so it will allow decompression
@@ -1164,11 +1202,12 @@ memblock LVPAFile::_UnpackFile(LVPAFileHeader& h)
         if(target.size)
             buf->read(target.ptr, target.size);
 
-        memset(target.ptr + target.size, 0, LVPA_EXTRA_BUFSIZE); // zero out extra space
+        
 
         delete buf;
     }
 
+    memset(target.ptr + target.size, 0, LVPA_EXTRA_BUFSIZE); // zero out extra space
     return target;
 }
 
@@ -1413,6 +1452,10 @@ bool IsSupported(LVPAAlgorithms algo)
 #endif
 #ifdef LVPA_SUPPORT_LZMA
     case LVPAPACK_LZMA:
+        return true;
+#endif
+#ifdef LVPA_SUPPORT_LZHAM
+    case LVPAPACK_LZHAM:
         return true;
 #endif
     case LVPAPACK_INHERIT:

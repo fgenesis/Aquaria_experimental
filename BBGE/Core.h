@@ -28,7 +28,6 @@ BUILD_MACOSX
 BUILD_X360
 BUILD_LINUX
 */
-
 #include "Base.h"
 #include "RenderObject.h"
 #include "SoundManager.h"
@@ -50,6 +49,9 @@ BUILD_LINUX
 
 #include "FrameBuffer.h"
 #include "Shader.h"
+
+#include "VFSIncludes.h"
+
 
 class ParticleEffect;
 
@@ -1382,6 +1384,8 @@ protected:
 	__int64 lastTime, curTime, freq;
 #endif
 
+    std::ofstream _logOut;
+
 #ifdef BBGE_BUILD_SDL
 	int nowTicks, thenTicks;
 #endif
@@ -1393,11 +1397,22 @@ protected:
 
 	//unsigned int windowWidth, windowHeight;
 
+public:
 	
 	int tgaSaveSeries(char	*filename,  short int width, short int height, unsigned char pixelDepth, unsigned char *imageData);
 	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+
+protected:
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
+
+    // VFS related
+private:
+    std::set<ttvfs::VFSFile*> vfsFilesToClear; // used for dropBuf() delaying
+public:
+    ttvfs::VFSHelperLVPA vfs;
+    void setupVFS(const char *extradir = NULL);
+    void addVFSFileForDrop(ttvfs::VFSFile *vf);
 };
 
 extern Core *core;

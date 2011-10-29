@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Precacher.h"
 #include "Quad.h"
 #include "Core.h"
+#include <VFSFile.h>
 
 Precacher::Precacher()
 {
@@ -123,7 +124,7 @@ void Precacher::precacheTex(const std::string &tex)
 void Precacher::precacheList(const std::string &list, void progressCallback())
 {
 	loadProgressCallback = progressCallback;
-	std::ifstream in(list.c_str());
+	VFSTextStdStreamIn in(list.c_str());
 	std::string t;
 	while (std::getline(in, t))
 	{
@@ -138,7 +139,7 @@ void Precacher::precacheList(const std::string &list, void progressCallback())
 			precacheTex(t);
 		}
 	}
-	in.close();
+	//in.close();
 	loadProgressCallback = NULL;
 }
 

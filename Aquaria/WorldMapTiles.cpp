@@ -240,13 +240,21 @@ WorldMap::WorldMap()
 	gw=gh=0;
 }
 
-void WorldMap::load(const std::string &file)
+void WorldMap::load()
+{
+    if (!dsq->mod.isActive())
+        _load("data/worldmap.txt");
+    else
+        _load(dsq->mod.getPath() + "data/worldmap.txt");
+}
+
+void WorldMap::_load(const std::string &file)
 {
 	worldMapTiles.clear();
 
 	std::string line;
 
-	std::ifstream in(file.c_str());
+	VFSTextStdStreamIn in(file.c_str());
 	
 	while (std::getline(in, line))
 	{
@@ -259,15 +267,52 @@ void WorldMap::load(const std::string &file)
 	}
 }
 
-void WorldMap::save(const std::string &file)
+void WorldMap::save()
 {
-	std::ofstream out(file.c_str());
+    std::string fn;
+
+    if (dsq->mod.isActive())
+         fn = dsq->mod.getPath() + "data/worldmap.txt";
+    else
+        fn = "data/worldmap.txt";
+
+    std::ofstream out(fn.c_str());
+
+    if (out)
+    {
+	    for (int i = 0; i < worldMapTiles.size(); i++)
+	    {
+		    WorldMapTile *t = &worldMapTiles[i];
+		    out << t->index << " " << t->stringIndex << " " << t->name << " " << t->layer << " " << t->scale << " " << t->gridPos.x << " " << t->gridPos.y << " " << t->prerevealed << " " << t->scale2 << std::endl;
+	    }
+        dsq->screenMessage("Saved worldmap data to " + fn);
+    }
+    else
+    {
+        dsq->screenMessage("Unable to save worldmap to " + fn);
+    }
+
+    /*
+	std::stringstream out;
 	
 	for (int i = 0; i < worldMapTiles.size(); i++)
 	{
 		WorldMapTile *t = &worldMapTiles[i];
-		out << t->index << " " << t->name << " " << t->layer << " " << t->scale << " " << t->gridPos.x << " " << t->gridPos.y << " " << t->prerevealed << " " << t->scale2 << std::endl;
+		out << t->index << " " << t->stringIndex << " " << t->name << " " << t->layer << " " << t->scale << " " << t->gridPos.x << " " << t->gridPos.y << " " << t->prerevealed << " " << t->scale2 << std::endl;
 	}
+
+    // FG: FIXME: make new VFSTextStdStreamOut class for this!
+    ttvfs::VFSFile *vf = core->vfs.GetFile(file.c_str());
+    if(vf)
+    {
+        vf->open(NULL, "w");
+        std::string str = out.str(); // avoid calling that twice
+        vf->write(str.c_str(), str.size());
+        vf->close();
+    }
+    else
+        debugLog("WorldMap::save(): FAILED for file: " + file);
+    */
 }
 
 void WorldMap::revealMap(const std::string &name)

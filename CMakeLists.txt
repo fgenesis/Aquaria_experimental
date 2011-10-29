@@ -136,16 +136,16 @@ if (NOT SDL_FOUND)
         message(STATUS "Using internal copy of SDL")
         set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib;${SDLDIR}/lib/macosx/libSDLmain.a")
     elseif(WIN32)
-        if(MSVC)
+        #if(MSVC)
             set(SDLDIR "${EXTLIBDIR}/SDL12")
             set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
             message(STATUS "Using internal copy of SDL")
             set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE INTERNAL "")
             set(SDL_LIBRARY_TEMP "${SDLDIR}/lib/win32/SDL.lib" CACHE INTERNAL "")
             set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY_TEMP} CACHE STRING "Where the SDL library can be found")
-        else(MSVC)
-            message(SEND_ERROR "We don't have a prebuilt SDL for this environment.")
-        endif(MSVC)
+        #else(MSVC)
+        #    message(SEND_ERROR "We don't have a prebuilt SDL for this environment.")
+        #endif(MSVC)
     else(MACOSX)
         message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
     endif(MACOSX)
@@ -159,14 +159,14 @@ if(NOT AQUARIA_INTERNAL_OPENAL)
 endif(NOT AQUARIA_INTERNAL_OPENAL)
 if (NOT OPENAL_FOUND)
     if(WIN32)
-        if(MSVC)
+        #if(MSVC)
             set(OPENALDIR "${EXTLIBDIR}/AL")
             set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
             message(STATUS "Using internal copy of OpenAL")
             set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
-        else(MSVC)
-            message(SEND_ERROR "We don't have a prebuilt OpenAL for this environment.")
-        endif(MSVC)
+        #else(MSVC)
+        #    message(SEND_ERROR "We don't have a prebuilt OpenAL for this environment.")
+        #endif(MSVC)
     else(WIN32)
         message(SEND_ERROR "We don't have a prebuilt OpenAL for this platform.")
     endif(WIN32)
@@ -175,7 +175,9 @@ endif (NOT OPENAL_FOUND)
 ################ End of external libraries
 
 INCLUDE_DIRECTORIES(${BBGEDIR})
-INCLUDE_DIRECTORIES(${BBGEDIR}/GL)
+
+INCLUDE_DIRECTORIES(${EXTLIBDIR})
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/GL)
 INCLUDE_DIRECTORIES(${EXTLIBDIR}/glpng/zlib)
 INCLUDE_DIRECTORIES(${SRCDIR})
 INCLUDE_DIRECTORIES(${FTGLDIR}/include)
@@ -184,6 +186,9 @@ INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs)
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/lvpa/include)
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/lvpa/lvpa)
 
 # !!! FIXME: don't use fmod!
 #INCLUDE_DIRECTORIES("${BBGEDIR}/fmodapi42604linux64/api/inc")
@@ -199,17 +204,20 @@ endif (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
 ADD_DEFINITIONS(-DGL_GLEXT_LEGACY=1)
 ADD_DEFINITIONS(-DHAVE_PUTENV=1)
 ADD_DEFINITIONS(-DTIXML_USE_STL=1)
-ADD_DEFINITIONS(-DBBGE_BUILD_SDL=1)
-ADD_DEFINITIONS(-DBBGE_BUILD_FRAMEBUFFER=1)
+
+# see BBGECompileConfig.h
+#ADD_DEFINITIONS(-DBBGE_BUILD_SDL=1)
+#ADD_DEFINITIONS(-DBBGE_BUILD_FRAMEBUFFER=1)
 #ADD_DEFINITIONS(-DBBGE_BUILD_SHADERS=1)
-ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL=1)
-ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL_DYNAMIC=1)
-ADD_DEFINITIONS(-DBBGE_BUILD_WIDESCREEN=1)
-ADD_DEFINITIONS(-DBBGE_BUILD_FMOD_OPENAL_BRIDGE=1)
-ADD_DEFINITIONS(-DAQUARIA_NODRM=1)
-ADD_DEFINITIONS(-DAQUARIA_FULL=1)
-ADD_DEFINITIONS(-DAQUARIA_BUILD_CONSOLE=1)
-ADD_DEFINITIONS(-DAQUARIA_BUILD_SCENEEDITOR=1)
+#ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL=1)
+#ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL_DYNAMIC=1)
+#ADD_DEFINITIONS(-DBBGE_BUILD_WIDESCREEN=1)
+#ADD_DEFINITIONS(-DBBGE_BUILD_FMOD_OPENAL_BRIDGE=1)
+
+# see AquariaCompileConfig.h
+#ADD_DEFINITIONS(-DAQUARIA_FULL=1)
+#ADD_DEFINITIONS(-DAQUARIA_BUILD_CONSOLE=1)
+#ADD_DEFINITIONS(-DAQUARIA_BUILD_SCENEEDITOR=1)
 
 IF(UNIX)
     ADD_DEFINITIONS(-DBBGE_BUILD_UNIX=1)
@@ -272,6 +280,7 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/Credits.cpp
     ${SRCDIR}/CurrentRender.cpp
     ${SRCDIR}/Demo.cpp
+    ${SRCDIR}/DemoContainerKeygen.cpp
     ${SRCDIR}/DSQ.cpp
     ${SRCDIR}/Element.cpp
     ${SRCDIR}/Emote.cpp
@@ -383,8 +392,12 @@ SET(BBGE_SRCS
     ${BBGEDIR}/TTFFont.cpp
     ${BBGEDIR}/Vector.cpp
     ${BBGEDIR}/FmodOpenALBridge.cpp
+    ${BBGEDIR}/tinyxml.cpp
+    ${BBGEDIR}/tinyxmlerror.cpp
+    ${BBGEDIR}/tinyxmlparser.cpp
+    ${BBGEDIR}/glfont2.cpp
+    ${BBGEDIR}/VFSFileStream.cpp
     ${COCOA_SRCS}
-    ${EXTLIBDIR}/glfont2/glfont2.cpp
     ${EXTLIBDIR}/glpng/glpng.c
     ${EXTLIBDIR}/glpng/png/png.c
     ${EXTLIBDIR}/glpng/png/pngerror.c
@@ -397,19 +410,6 @@ SET(BBGE_SRCS
     ${EXTLIBDIR}/glpng/png/pngrutil.c
     ${EXTLIBDIR}/glpng/png/pngset.c
     ${EXTLIBDIR}/glpng/png/pngtrans.c
-    ${EXTLIBDIR}/glpng/zlib/adler32.c
-    ${EXTLIBDIR}/glpng/zlib/crc32.c
-    ${EXTLIBDIR}/glpng/zlib/compress.c
-    ${EXTLIBDIR}/glpng/zlib/deflate.c
-    ${EXTLIBDIR}/glpng/zlib/inffast.c
-    ${EXTLIBDIR}/glpng/zlib/inflate.c
-    ${EXTLIBDIR}/glpng/zlib/inftrees.c
-    ${EXTLIBDIR}/glpng/zlib/trees.c
-    ${EXTLIBDIR}/glpng/zlib/uncompr.c
-    ${EXTLIBDIR}/glpng/zlib/zutil.c
-    ${EXTLIBDIR}/tinyxml.cpp
-    ${EXTLIBDIR}/tinyxmlerror.cpp
-    ${EXTLIBDIR}/tinyxmlparser.cpp
 )
 
 # Apparently not used at the moment. Listed here just for completeness.
@@ -423,6 +423,14 @@ SET(BBGE_SRCS_UNUSED
     ${BBGEDIR}/PackRead.cpp
     ${BBGEDIR}/PointSprites.cpp
 )
+
+IF(CMAKE_COMPILER_IS_GNUCC)
+    SET_SOURCE_FILES_PROPERTIES(
+        ${SRCDIR}/DemoContainerKeygen.cpp
+        ${BBGEDIR}/FmodOpenALBridge.cpp
+        PROPERTIES COMPILE_FLAGS "-fpermissive"
+    )
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
 SET(FTGL_SRCS
     ${FTGLSRCDIR}/FTCharmap.cpp
@@ -559,6 +567,11 @@ SET(LUA_SRCS
     ${LUASRCDIR}/lmathlib.c
 )
 
+ADD_SUBDIRECTORY(ExternalLibs/ttvfs)
+ADD_SUBDIRECTORY(ExternalLibs/lvpa)
+
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ttvfs lvpa lvpa_ttvfs zlib)
+
 
 IF(MACOSX)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")
@@ -569,6 +582,13 @@ ENDIF(MACOSX)
 
 SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${SDL_LIBRARY})
 SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OPENAL_LIBRARY})
+
+## OpenGL (for mingw)
+IF(WIN32)
+    IF(CMAKE_COMPILER_IS_GNUCC)
+        SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} glu32 opengl32)
+    ENDIF(CMAKE_COMPILER_IS_GNUCC)
+ENDIF(WIN32)
 
 IF(FREETYPE_FOUND)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${FREETYPE_LIBRARIES})

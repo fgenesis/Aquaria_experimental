@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/BitmapFont.h"
 #include "../BBGE/ScreenTransition.h"
 #include "../BBGE/Precacher.h"
-#include "../ExternalLibs/tinyxml.h"
+#include "tinyxml.h"
 #include "AquariaMenuItem.h"
 #include "ScriptInterface.h"
 
@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class Game;
 class DebugFont;
 class ProfRender;
+class ModSelectorScreen;
 
 const float FRAME_TIME = 0.04;
 
@@ -197,10 +198,11 @@ class StringBank
 {
 public:
 	StringBank();
-	void load(const std::string &file);
+	void load();
 
 	std::string get(int idx);
 protected:
+    void _load(const std::string &file);
 
 	typedef std::map<int, std::string> StringMap;
 	StringMap stringMap;
@@ -227,8 +229,16 @@ protected:
 	bool vis, hidden;
 };
 
+enum ModType
+{
+    MODTYPE_MOD,
+    MODTYPE_PATCH,
+};
+
 struct ModEntry
 {
+    unsigned int id; // index in vector
+    ModType type;
 	std::string path;
 };
 
@@ -237,7 +247,8 @@ class Mod
 public:
 	Mod();
 	void clear();
-	void loadModXML(TiXmlDocument *d, std::string modName);
+	static void loadModXML(TiXmlDocument *d, std::string modName);
+    static ModType getTypeFromXML(TiXmlElement *xml);
 	void setActive(bool v);
 	void start();
 	void stop();
@@ -251,6 +262,7 @@ public:
 
 	bool isActive();
 	bool isDebugMenu();
+    bool hasWorldMap();
 
 	std::string getPath();
 	std::string getName();
@@ -260,6 +272,7 @@ public:
 protected:
 	bool shuttingDown;
 	bool active;
+    bool hasMap;
 	int doRecache;
 	int debugMenu;
 	int enqueueModStart;
@@ -267,18 +280,6 @@ protected:
 
 	std::string name;
 	std::string path;
-};
-
-class ModSelector : public AquariaGuiQuad
-{
-public:
-	ModSelector();
-	void refreshTexture();
-protected:
-	bool refreshing;
-	BitmapText *label;
-	void onUpdate(float dt);
-	bool mouseDown;
 };
 
 class AquariaScreenTransition : public ScreenTransition
@@ -578,8 +579,8 @@ protected:
 struct WorldMap
 {
 	WorldMap();
-	void load(const std::string &file);
-	void save(const std::string &file);
+	void load();
+	void save();
 	void hideMap();
 	void revealMap(const std::string &name);
 	WorldMapTile *getWorldMapTile(const std::string &name);
@@ -592,6 +593,9 @@ struct WorldMap
 	int gw, gh;
 	typedef std::vector<WorldMapTile> WorldMapTiles;
 	WorldMapTiles worldMapTiles;
+
+private:
+    void _load(const std::string &file);
 };
 
 class Path;
@@ -1345,6 +1349,7 @@ public:
 	std::string initScene;
 
 	bool modIsSelected;
+    bool modIsKnown(const std::string& name);
 
 	void toggleMuffleSound(bool toggle);
 	void toggleInputMode();
@@ -1361,10 +1366,12 @@ public:
 	bool onPickedSaveSlot(AquariaSaveSlot *slot);
 	void doSaveSlotMenu(SaveSlotMode ssm, const Vector &position = Vector(0,0,0));
 	void doModSelect();
+    static void loadModsCallback(const std::string &filename, intptr_t param);
+    static void loadModPackagesCallback(const std::string &filename, intptr_t param);
 	void doLoadMenu();
 	void onExitSaveSlotMenu();
 	ScriptInterface scriptInterface;
-	bool runScript(const std::string &name, const std::string &func="");
+	bool runScript(const std::string &name, const std::string &func="", bool ignoremissing = false);
 	bool runScriptNum(const std::string &name, const std::string &func="", float num=0);
 	void collectScriptGarbage();
 
@@ -1392,7 +1399,7 @@ public:
 	void takeScreenshot();
 	void takeScreenshotKey();
 
-	void jumpToSection(std::ifstream &inFile, const std::string &section);
+	//void jumpToSection(std::ifstream &inFile, const std::string &section);
 
 	PathFinding pathFinding;
 	void runGesture(const std::string &line);
@@ -1454,6 +1461,7 @@ public:
 
 	void createModSelector();
 	void clearModSelector();
+    bool mountModPackage(const std::string&);
 
 	bool doScreenTrans;
 
@@ -1481,14 +1489,19 @@ public:
 	Mod mod;
 
 	void loadMods();
+    void applyPatches();
+    void refreshResourcesForPatch(const std::string& name);
+    void applyPatch(const std::string& name);
+    void unapplyPatch(const std::string& name);
 
 	std::vector<ModEntry> modEntries;
+    std::set<std::string> activePatches;
 	int selectedMod;
-	ModSelector *modSelector;
+	ModSelectorScreen *modSelectorScr;
 
 	void startSelectedMod();
-	void selectNextMod();
-	void selectPrevMod();
+	/*void selectNextMod();
+	void selectPrevMod();*/
 	ModEntry* getSelectedModEntry();
 
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
@@ -1556,6 +1569,10 @@ public:
 	void pauseCutscene(bool on);
 	bool canSkipCutscene();
 	bool isSkippingCutscene();
+
+    void clearMenu(float t = 0.01);
+    std::vector <RenderObject*> menu;
+
 protected:
 
 	Quad *cutscene_bg;
@@ -1609,8 +1626,6 @@ protected:
 	BitmapText *expText, *moneyText;
 	TiXmlDocument *xmlDoc;
 
-	void clearMenu(float t = 0.01);
-	std::vector <RenderObject*> menu;
 	BitmapText *saveSlotPageCount;
 
 	void updateSaveSlotPageCount();
@@ -1624,6 +1639,7 @@ protected:
 
 	void modifyDt(float &dt);
 };
+
 
 extern DSQ *dsq;
 

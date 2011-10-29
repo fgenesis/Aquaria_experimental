@@ -20,16 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #pragma once
 
-#ifdef BBGE_BUILD_WINDOWS
-	typedef unsigned __int32	uint32;
-#endif
-#ifdef BBGE_BUILD_UNIX
-	#include <stdint.h>
-	typedef uint32_t			uint32;
-#endif
-#ifdef BBGE_BUILD_X360
-	typedef unsigned int		uint32;
-#endif
+//#include "SysDefs.h"
+typedef unsigned int uint32;
 
 class Flags
 {

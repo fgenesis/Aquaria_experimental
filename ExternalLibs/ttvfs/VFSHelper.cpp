@@ -1,6 +1,8 @@
 // VFSHelper.cpp - glues it all together and makes use simple
 // For conditions of distribution and use, see copyright notice in VFS.h
 
+#include <iostream> // for debug only, see EOF
+
 #include "VFSInternal.h"
 #include "VFSHelper.h"
 #include "VFSAtomic.h"
@@ -19,6 +21,26 @@
 
 
 VFS_NAMESPACE_START
+
+// predecl is in VFS.h
+bool _checkCompatInternal(bool large, bool nocase, unsigned int vfspos_size)
+{
+#ifdef VFS_LARGEFILE_SUPPORT
+    bool largefile_i = true;
+#else
+    bool largefile_i = false;
+#endif
+
+#ifdef VFS_IGNORE_CASE
+    bool nocase_i = true;
+#else
+    bool nocase_i = false;
+#endif
+
+    return (large == largefile_i)
+        && (nocase == nocase_i)
+        && (sizeof(vfspos) == vfspos_size);
+}
 
 VFSHelper::VFSHelper()
 : filesysRoot(NULL), merged(NULL)
@@ -171,7 +193,7 @@ void VFSHelper::_StoreMountPoint(const VDirEntry& ve)
 {
     // scan through and ensure only one mount point with the same data is present.
     // if present, remove and re-add, this ensures the mount point is at the end of the list
-    for(VFSMountList::const_iterator it = vlist.begin(); it != vlist.end(); )
+    for(VFSMountList::iterator it = vlist.begin(); it != vlist.end(); )
     {
         const VDirEntry& oe = *it;
         if(ve.mountPoint == oe.mountPoint && ve.vdir == oe.vdir
@@ -188,7 +210,7 @@ void VFSHelper::_StoreMountPoint(const VDirEntry& ve)
 
 bool VFSHelper::_RemoveMountPoint(const VDirEntry& ve)
 {
-    for(VFSMountList::const_iterator it = vlist.begin(); it != vlist.end(); ++it)
+    for(VFSMountList::iterator it = vlist.begin(); it != vlist.end(); ++it)
     {
         const VDirEntry& oe = *it;
         if(ve.mountPoint == oe.mountPoint && ve.vdir == oe.vdir)
@@ -261,8 +283,7 @@ VFSFile *VFSHelper::GetFile(const char *fn)
                 break;
     }
 
-    //if(!vf)
-    //    printf("!! VFS: GetFile '%s' -> '%s' (%p)\n", fn, vf ? vf->fullname() : "NULL", vf);
+    //printf("VFS: GetFile '%s' -> '%s' (%p)\n", fn, vf ? vf->fullname() : "NULL", vf);
 
     return vf;
 }
@@ -280,6 +301,10 @@ VFSDir *VFSHelper::GetDirRoot(void)
 {
     VFS_GUARD_OPT(this);
     return merged;
+}
+
+void VFSHelper::ClearGarbage(void)
+{
 }
 
 

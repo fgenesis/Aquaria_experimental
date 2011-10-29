@@ -22,6 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core.h"
 #include "../ExternalLibs/glpng.h"
 
+#include <VFSFile.h>
+
 #include <assert.h>
 
 #if defined(BBGE_BUILD_UNIX)
@@ -343,7 +345,37 @@ void Texture::load(std::string file)
 		debugLog(os.str());
 	}
 
-    bool found = exists(file);
+	/*if (!exists(file, false) && (pos == std::string::npos || pos == 0))
+	{
+		std::string originalFile = file;
+		file = originalFile + ".png";
+		//errorLog ("Trying png");
+		if (!exists(file, false))
+		{
+		//	errorLog ("trying jpg");
+			//file = originalFile + ".jp2";
+			//if (!exists(file, false))
+			{
+				file = originalFile;
+                notfound = true;
+			}
+		}
+		else
+		{
+		//	errorLog ("png exists!");
+		}
+	}
+	else
+	{
+		check = false;
+	}*/
+
+    bool found = false;
+
+    if(!found && exists(file))
+    {
+        found = true;
+    }
 
     if(!found && exists(file + ".png"))
     {
@@ -351,8 +383,11 @@ void Texture::load(std::string file)
         file += ".png";
     }
 
-    // .tga/.zga are never used as game graphics anywhere except save slot thumbnails.
-    // if so, their file names are passed exact, not with a missing extension
+    /*if(!found && exists(file + ".zga"))
+    {
+        found = true;
+        file += ".png";
+    }*/
 
 	if (found)
 	{
@@ -386,6 +421,10 @@ void Texture::load(std::string file)
 			}
 #endif
 		}
+		/*else if (post == "bmp")
+		{
+			loadBMP(file);
+		}*/
 		else if (post == "zga")
 		{
 			if (core->getUserDataFolder().empty())
@@ -470,6 +509,19 @@ void Texture::loadPNG(const std::string &file)
 
 #ifdef BBGE_BUILD_OPENGL
 
+    ttvfs::VFSFile *vf = core->vfs.GetFile(file.c_str()); // VFS related
+    const char *memptr = vf ? (const char*)vf->getBuf() : NULL;
+    if(!memptr)
+    {
+        debugLog("Can't load PNG file: " + file);
+        width = 64;
+        height = 64;
+        Texture::textureError = TEXERR_FILENOTFOUND;
+        //exit(1);
+        return;
+    }
+
+    int memsize = vf->size();
 
 	pngInfo info;
 
@@ -483,11 +535,13 @@ void Texture::loadPNG(const std::string &file)
 
 	if (filter == GL_NEAREST)
 	{
-		textures[0] = pngBind(file.c_str(), PNG_NOMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, filter, filter);
+		//textures[0] = pngBind(file.c_str(), PNG_NOMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, filter, filter);
+        textures[0] = pngBindMem(memptr, memsize, PNG_NOMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, filter, filter);
 	}
 	else
 	{
-		textures[0] = pngBind(file.c_str(), PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
+		//textures[0] = pngBind(file.c_str(), PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
+        textures[0] = pngBindMem(memptr, memsize, PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
 	}
 
 
@@ -507,16 +561,8 @@ void Texture::loadPNG(const std::string &file)
 		width = info.Width;
 		height = info.Height;
 	}
-	else
-	{
-		debugLog("Can't load PNG file: " + file);
-		width = 64;
-		height = 64;
-		Texture::textureError = TEXERR_FILENOTFOUND;
-		//exit(1);
-	}
 
-
+    vf->dropBuf(true);
 #endif
 }
 
@@ -577,7 +623,6 @@ void Texture::loadTGA(const std::string &file)
 	}
 #endif
 }
-
 
 #define TGA_RGB		 2		// This tells us it's a normal RGB (really BGR) file
 #define TGA_A		 3		// This tells us it's a ALPHA file

@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Base.h"
 #include "Core.h"
+#include <VFSFile.h>
+#include "VFSDir.h"
 
 #ifdef BBGE_BUILD_WINDOWS
 	#include <shellapi.h>
@@ -272,30 +274,28 @@ std::string upperCase(const std::string &s1)
 	return ret;
 }
 
-bool exists(const std::string &f, bool makeFatal)
+bool exists(const std::string &f, bool makeFatal /* = false */, bool skipVFS /* = false */)
 {
-	/*
-	if (!PHYSFS_exists(f.c_str()))
-	{
-	*/
-	/*
-        std::ostringstream os;
-        os << "checking to see if [" << f << "] exists";
-        debugLog(os.str());
-        */
+    // VFS related
+    if (f.empty())
+        return false;
+    if(!skipVFS)
+    {
+        if(core->vfs.GetFile(core->adjustFilenameCase(f).c_str()))
+            return true;
+    }
 
-		FILE *file = fopen(core->adjustFilenameCase(f).c_str(), "rb");
-		if (!file)
+	FILE *file = fopen(core->adjustFilenameCase(f).c_str(), "rb");
+	if (!file)
+	{
+		if (makeFatal)
 		{
-			if (makeFatal)
-			{
-				errorLog(std::string("Could not open [" + f + "]"));
-				exit(0);
-			}
-			return false;
+			errorLog(std::string("Could not open [" + f + "]"));
+			exit(0);
 		}
-		fclose(file);
-	//}
+		return false;
+	}
+	fclose(file);
 	return true;
 }
 
@@ -448,6 +448,20 @@ void debugLog(const std::string &s)
 // delete[] when no longer needed.
 char *readFile(std::string path, unsigned long *size_ret)
 {
+    // VFS related
+    ttvfs::VFSFile *vf = core->vfs.GetFile(path.c_str());
+    if(!vf)
+        return NULL;
+    vf->getBuf(); // force size calc
+    // FG: FIXME: improve VFS buffer unlinking and prevent excessive copying around
+    char *buf = new char[vf->size() + 1];
+    memcpy(buf, vf->getBuf(), vf->size() + 1);
+    core->addVFSFileForDrop(vf);
+    if(size_ret)
+        *size_ret = vf->size();
+    return buf;
+
+    /*
 	FILE *f = fopen(path.c_str(), "rb");
 	if (!f)
 		return NULL;
@@ -489,6 +503,7 @@ char *readFile(std::string path, unsigned long *size_ret)
 		*size_ret = fileSize;
 	buffer[fileSize] = 0;
 	return buffer;
+    */
 }
 
 /*
@@ -559,6 +574,33 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
     stringToLower(type);
 	//HACK: MAC:
 	debugLog("forEachFile - path: " + path + " type: " + type);
+
+    ttvfs::VFSDir *vd = core->vfs.GetDir(path.c_str(), false);
+    if(!vd)
+    {
+        debugLog("Path '" + path + "' does not exist");
+        return;
+    }
+
+    for(ttvfs::ConstFileIter it = vd->_files.begin(); it != vd->_files.end(); ++it)
+    {
+        const ttvfs::VFSFile *f = it->second;
+        const char *e = strrchr(f->name(), '.');
+        if (e)
+        {
+            std::string exs(e);
+            stringToLower(exs);
+            if(exs != type)
+                continue;
+        }
+
+        callback(path + f->name(), param);
+    }
+
+    return;
+    // --- BELOW HERE NOT TOUCHED ANYMORE ---
+
+
 
 #if defined(BBGE_BUILD_UNIX)
 	DIR *dir=0;

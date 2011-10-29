@@ -40,7 +40,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\LVPA&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\lvpa&quot;"
+				PreprocessorDefinitions="WIN32"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -100,18 +101,19 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\LVPA&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\lvpa&quot;"
+				PreprocessorDefinitions="WIN32"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
-				EnableEnhancedInstructionSet="2"
+				EnableEnhancedInstructionSet="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -153,646 +155,270 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\LVPA\ICompressor.h"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\DeflateCompressor.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\LVPAFile.cpp"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LVPAFile.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\LVPAFile.h"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LVPAStreamCipher.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\LVPAStreamCipher.cpp"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LVPATools.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\LVPAStreamCipher.h"
+				RelativePath="..\..\ExternalLibs\lvpa\lzf\lzf_c.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\LZMACompressor.cpp"
+				RelativePath="..\..\ExternalLibs\lvpa\lzf\lzf_d.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\LZMACompressor.h"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LZFCompressor.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\LZOCompressor.cpp"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LZHAMCompressor.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\LZOCompressor.h"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LZMACompressor.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\sha256.cpp"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LZOCompressor.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\sha256.h"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\MyCrc32.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\SHA256Hash.cpp"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\ProgressBar.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\LVPA\SHA256Hash.h"
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\sha256.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\SHA256Hash.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa_ttvfs\VFSDirLVPA.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa_ttvfs\VFSFileLVPA.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa_ttvfs\VFSHelperLVPA.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa_ttvfs\VFSLoaderLVPA.cpp"
 				>
 			</File>
 			<Filter
-				Name="lzma"
+				Name="lzham"
 				>
 				<File
-					RelativePath="..\..\LVPA\lzma\LzFind.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\LzFind.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_assert.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\LzHash.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_assert.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\Lzma2Dec.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_checksum.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\Lzma2Dec.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_checksum.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\Lzma2Enc.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_comp.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\Lzma2Enc.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_config.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\LzmaDec.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_core.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\LzmaDec.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_decomp.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\LzmaEnc.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_dynamic_lib.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\LzmaEnc.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_helpers.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzma\LzTypes.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_huffman_codes.cpp"
 					>
 				</File>
-			</Filter>
-			<Filter
-				Name="lzo"
-				>
 				<File
-					RelativePath="..\..\LVPA\lzo\compr1b.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_huffman_codes.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\compr1c.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_lzbase.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config1.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_lzbase.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config1a.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_lzcomp.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config1b.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_lzcomp_internal.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config1c.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_lzcomp_internal.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config1f.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_lzdecomp.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config1x.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_lzdecompbase.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config1y.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_lzdecompbase.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config1z.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_match_accel.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\config2a.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_match_accel.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_math.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1_99.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_mem.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1_cm.ch"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_mem.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1_d.ch"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_null_threading.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1a.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_platform.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1a_99.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_platform.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1a_cm.ch"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_polar_codes.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1a_cr.ch"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_polar_codes.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1a_de.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_prefix_coding.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_1.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_prefix_coding.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_2.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_pthreads_threading.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_3.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_pthreads_threading.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_4.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_static_lib.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_5.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_symbol_codec.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_6.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_symbol_codec.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_7.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_threading.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_8.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_timer.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_9.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_timer.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_99.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_traits.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_9x.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_types.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_c.ch"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_utils.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_cc.c"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_vector.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_cc.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_vector.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_cm.ch"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_win32_threading.cpp"
 					>
 				</File>
 				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_cr.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_d.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_d1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_d2.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_de.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_r.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_rr.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_sm.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_tm.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1b_xx.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_2.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_3.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_4.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_5.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_6.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_7.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_8.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_9.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_99.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_9x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_cc.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_cc.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_d1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_d2.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_rr.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1c_xx.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1f_1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1f_9x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1f_d.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1f_d1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1f_d2.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_1k.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_1l.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_1o.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_9x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_c.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_d.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_d1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_d2.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_d3.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_o.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1x_oo.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1y_1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1y_9x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1y_d1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1y_d2.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1y_d3.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1y_o.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1z_9x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1z_d1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1z_d2.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo1z_d3.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo2a_9x.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo2a_d.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo2a_d1.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo2a_d2.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_conf.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_crc.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_dict.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_dll.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_init.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_mchw.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_ptr.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_ptr.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_str.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_swd.ch"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\lzo_util.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\miniacc.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\stats1a.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\stats1b.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\lzo\stats1c.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="vfs"
-				>
-				<File
-					RelativePath="..\..\LVPA\VFSDir.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSDir.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSDirLVPA.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSDirLVPA.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSFile.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSFile.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSFileLVPA.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSFileLVPA.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSHelper.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSHelper.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSLoader.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSLoader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSLoaderLVPA.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\VFSLoaderLVPA.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="misc"
-				>
-				<File
-					RelativePath="..\..\LVPA\ByteBuffer.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\ByteConverter.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\common.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\DebugStuff.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\SDLAtomic.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\SDLAtomic.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\SelfRefCounter.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\SysDefs.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\tools.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\LVPA\tools.h"
+					RelativePath="..\..\ExternalLibs\lvpa\lzham\lzham_win32_threading.h"
 					>
 				</File>
 			</Filter>
@@ -802,6 +428,110 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\ByteBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\ByteConverter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\DeflateCompressor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\ICompressor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\tests\LVPACipherTests.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\include\LVPACommon.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\include\LVPACompileConfig.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\include\LVPAFile.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LVPAInternal.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LVPAStreamCipher.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\tests\LVPATests.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LVPATools.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lzf\lzf.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LZFCompressor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lzf\lzfP.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LZMACompressor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\LZOCompressor.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\MersenneTwister.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\MyCrc32.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\ProgressBar.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\sha256.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa\SHA256Hash.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa_ttvfs\VFSDirLVPA.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa_ttvfs\VFSFileLVPA.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa_ttvfs\VFSHelperLVPA.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\lvpa\lvpa_ttvfs\VFSLoaderLVPA.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

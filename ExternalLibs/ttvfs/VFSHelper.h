@@ -8,8 +8,11 @@
 #include <vector>
 #include <deque>
 #include <list>
+#include <string>
+#include <iostream>
 
 #include "VFSAtomic.h"
+
 
 VFS_NAMESPACE_START
 
@@ -68,6 +71,10 @@ public:
 
     /** Reset an instance to its initial state */
     virtual void Clear(void);
+
+    /** Do cleanups from time to time. In base VFSHelper, this is a no-op.
+        Extensions may wish to override this method do do cleanup jobs. */
+    virtual void ClearGarbage(void);
 
     /** Load all files from working directory (into an internal tree) */
     bool LoadFileSysRoot(void);

@@ -68,37 +68,24 @@ public:
 
     // iterators are NOT thread-safe! If you need to iterate over things in a multithreaded environment,
     // do the locking yourself! (see below)
-    // -- file iterators
-    /*inline Files::iterator fileIter() { return _files.begin(); }
-    inline VFSFile *next(Files::iterator& it)
-    {   if(it == _files.end()) return NULL;
-        VFSFile *f = it->second; ++it; return f;
-    }
-    inline Files::const_iterator fileIter() const { return _files.begin(); }
-    inline const VFSFile *next(Files::const_iterator& it) const
-    {   if(it == _files.end()) return NULL;
-        const VFSFile *f = it->second; ++it; return f;
-    }
-    // -- subdir iterators
-    inline Dirs::iterator dirIter() { return _subdirs.begin(); }
-    inline VFSDir *next(Dirs::iterator& it)
-    {   if(it == _subdirs.end()) return NULL;
-        VFSDir *d = it->second; ++it; return d;
-    }
-    inline Dirs::const_iterator dirIter() const { return _subdirs.begin(); }
-    inline const VFSDir *next(Dirs::const_iterator& it) const
-    {   if(it == _subdirs.end()) return NULL;
-        const VFSDir *d = it->second; ++it; return d;
-    }*/
+    inline Files::iterator       fileIter()          { return _files.begin(); }
+    inline Files::iterator       fileIterEnd()       { return _files.end(); }
+    inline Dirs::iterator        dirIter()           { return _subdirs.begin(); }
+    inline Dirs::iterator        dirIterEnd()        { return _subdirs.end(); }
+    inline Files::const_iterator fileIter()    const { return _files.begin(); }
+    inline Files::const_iterator fileIterEnd() const { return _files.end(); }
+    inline Dirs::const_iterator  dirIter()     const { return _subdirs.begin(); }
+    inline Dirs::const_iterator  dirIterEnd()  const { return _subdirs.end(); }
 
+    // std::map<std::string,*> stores for files and subdirs
     Files _files;
     Dirs _subdirs;
 
+    // reference counter, does auto-delete holder when it reaches 0. initially 1.
     SelfRefCounter<VFSDir> ref;
 
     // the following functions should be used before and after an iteration finishes
     // alternatively, VFS_GUARD(dir) can be used to create a locking guard on the stack.
-    
     inline void lock() { _mtx.Lock(); }
     inline void unlock() { _mtx.Unlock(); }
     inline Mutex& mutex() const { return _mtx; }

@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SoundManager.h"
 #include "Core.h"
 #include "Base.h"
+#include <VFSFile.h>
 
 #if defined(BBGE_BUILD_FMODEX)
     #ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
@@ -133,7 +134,19 @@ FMOD_RESULT F_CALLBACK myopen(const char *name, int unicode, unsigned int *files
 {
     if (name)
     {
-        FILE *fp;
+        // VFS related
+        ttvfs::VFSFile *vf = core->vfs.GetFile(name);
+        if(!vf)
+            return FMOD_ERR_FILE_NOTFOUND;
+
+        vf->open();
+        //vf->getBuf();
+        *filesize = vf->size();
+        *handle = (void*)vf;
+        *userdata = (void *)0x12345678;
+
+
+        /*FILE *fp;
 
         fp = fopen(name, "rb");
         if (!fp)
@@ -146,7 +159,7 @@ FMOD_RESULT F_CALLBACK myopen(const char *name, int unicode, unsigned int *files
         fseek(fp, 0, SEEK_SET);
 
         *userdata = (void *)0x12345678;
-        *handle = fp;
+        *handle = fp;*/
     }
 
     return FMOD_OK;
@@ -159,7 +172,10 @@ FMOD_RESULT F_CALLBACK myclose(void *handle, void *userdata)
         return FMOD_ERR_INVALID_PARAM;
     }
 
-    fclose((FILE *)handle);
+    ttvfs::VFSFile *vf = (ttvfs::VFSFile*)handle;
+    vf->close();
+    core->addVFSFileForDrop(vf);
+    //fclose((FILE *)handle);
 
     return FMOD_OK;
 }
@@ -173,7 +189,9 @@ FMOD_RESULT F_CALLBACK myread(void *handle, void *buffer, unsigned int sizebytes
 
     if (bytesread)
     {
-        *bytesread = (int)fread(buffer, 1, sizebytes, (FILE *)handle);
+        ttvfs::VFSFile *vf = (ttvfs::VFSFile*)handle;
+        *bytesread = vf->read((char*)buffer, sizebytes);
+        //*bytesread = (int)fread(buffer, 1, sizebytes, (FILE *)handle);
     
         if (*bytesread < sizebytes)
         {
@@ -191,7 +209,9 @@ FMOD_RESULT F_CALLBACK myseek(void *handle, unsigned int pos, void *userdata)
         return FMOD_ERR_INVALID_PARAM;
     }
 
-    fseek((FILE *)handle, pos, SEEK_SET);
+    //fseek((FILE *)handle, pos, SEEK_SET);
+    ttvfs::VFSFile *vf = (ttvfs::VFSFile*)handle;
+    vf->seek(pos);
 
     return FMOD_OK;
 }

@@ -707,6 +707,9 @@ void SceneEditor::init()
 
 	addAction(MakeFunctionEvent(SceneEditor, createAquarian), KEY_F, 0);
 
+    // FG: my addition, to regen map template from obs
+    addAction(MakeFunctionEvent(SceneEditor, dumpObs), KEY_F8, 0);
+
 
 	/*
 	// OLD CRAP
@@ -972,35 +975,44 @@ void SceneEditor::toggleWarpAreaRender()
 		//warpAreaRender->alpha.interpolateTo(1, 0.2);
 }
 
+void SceneEditor::setGridPattern(int gi)
+{
+    if (selectedElements.size())
+        for (int i = 0; i < selectedElements.size(); ++i)
+            selectedElements[i]->setElementEffectByIndex(gi);
+    else if (editingElement)
+        editingElement->setElementEffectByIndex(gi);
+}
+
 void SceneEditor::setGridPattern0()
-{	if (editingElement)	editingElement->setElementEffectByIndex(-1); }
+{	setGridPattern(-1);	}
 
 void SceneEditor::setGridPattern1()
-{	if (editingElement)	editingElement->setElementEffectByIndex(0);	}
+{	setGridPattern(0);	}
 
 void SceneEditor::setGridPattern2()
-{	if (editingElement)	editingElement->setElementEffectByIndex(1);	}
+{	setGridPattern(1);	}
 
 void SceneEditor::setGridPattern3()
-{	if (editingElement)	editingElement->setElementEffectByIndex(2);	}
+{	setGridPattern(2);	}
 
 void SceneEditor::setGridPattern4()
-{	if (editingElement)	editingElement->setElementEffectByIndex(3);	}
+{	setGridPattern(3);	}
 
 void SceneEditor::setGridPattern5()
-{	if (editingElement)	editingElement->setElementEffectByIndex(4);	}
+{	setGridPattern(4);	}
 
 void SceneEditor::setGridPattern6()
-{	if (editingElement)	editingElement->setElementEffectByIndex(5);	}
+{	setGridPattern(5);	}
 
 void SceneEditor::setGridPattern7()
-{	if (editingElement)	editingElement->setElementEffectByIndex(6);	}
+{	setGridPattern(6);	}
 
 void SceneEditor::setGridPattern8()
-{	if (editingElement)	editingElement->setElementEffectByIndex(7);	}
+{	setGridPattern(7);	}
 
 void SceneEditor::setGridPattern9()
-{	if (editingElement)	editingElement->setElementEffectByIndex(8);	}
+{	setGridPattern(8);	}
 
 void SceneEditor::moveToFront()
 {
@@ -2419,15 +2431,19 @@ void SceneEditor::moveElementToLayer(Element *e, int bgLayer)
 		{
 			Element *e = selectedElements[i];
 			core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
+			dsq->removeElement(e);
 			e->bgLayer = bgLayer;
+			dsq->addElement(e);
+			core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
 		}
 	}
 	else if (e)
 	{
 		core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-		core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
+		dsq->removeElement(e);
 		e->bgLayer = bgLayer;
+		dsq->addElement(e);
+		core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
 	}
 }
 
@@ -2489,36 +2505,25 @@ void SceneEditor::action(int id, int state)
 	}
 	else if (editType == ET_ELEMENTS && state && id >= ACTION_BGLAYER1 && id < ACTION_BGLAYEREND)
 	{
-		/*
-		std::string copy = action;
-		copy = copy.substr(std::string("bgLayer").length(), action.length());
-		std::istringstream is(copy);
-		int v;
-		is >> v;
-		this->bgLayer = v-1;
-		*/
+        int newLayer = id - ACTION_BGLAYER1;
 
-		int v = id - ACTION_BGLAYER1;
-		this->bgLayer = v;
+        updateText();
 
-		updateText();
+        if (core->getAltState())
+        {
+            dsq->game->setElementLayerVisible(newLayer, !dsq->game->isElementLayerVisible(newLayer));
+            return;
+        }
+        else if (core->getShiftState() && (editingElement || !selectedElements.empty()))
+        {
+            moveElementToLayer(editingElement, newLayer);
+        }
+        else
+        {
+            selectedElements.clear();
+        }
 
-		if (core->getAltState())
-		{
-			dsq->game->setElementLayerVisible(bgLayer, !dsq->game->isElementLayerVisible(bgLayer));
-			//core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer)->visible = !core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer)->visible;
-		}
-		else if (core->getShiftState() && (editingElement || !selectedElements.empty()))
-		{
-			moveElementToLayer(editingElement, bgLayer);
-			//editingElement->bgLayer
-			//editingElement->bgLayer = this->bgLayer;
-		}
-		else
-		{
-			selectedElements.clear();
-		}
-
+        this->bgLayer = newLayer;
 	}
 	/*
 	Vector multiSelectPoint, secondMultiSelectPoint;
@@ -2563,6 +2568,7 @@ void SceneEditor::loadSceneByName()
 void SceneEditor::reloadScene()
 {
 	debugLog("reloadScene");
+
 	dsq->game->positionToAvatar = dsq->game->avatar->position;
 	dsq->game->transitionToScene(dsq->game->sceneName);
 }
@@ -2570,6 +2576,11 @@ void SceneEditor::reloadScene()
 
 void SceneEditor::loadScene()
 {
+    // FG: HACKS
+    particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
+    Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
+
+
 	if (core->getShiftState())
 	{
 		loadSceneByName();
@@ -2860,7 +2871,7 @@ void SceneEditor::nextElement()
 		return;
 	}
 
-	if (core->getShiftState())
+	if (core->getAltState())
 	{
 		debugLog("rebuilding level!");
 		dsq->game->reconstructGrid(true);
@@ -2998,6 +3009,10 @@ void SceneEditor::doPrevElement()
 	if (curElement < 0)
 		curElement = dsq->game->elementTemplates.size()-1;
 
+    // FG: HACK - crashfix
+    if (curElement < 0)
+        return;
+
 	if (dsq->game->elementTemplates[curElement].idx < 1024)
 	{
 		//int idx = dsq->game->elementTemplates[curElement].idx;
@@ -3113,9 +3128,9 @@ void SceneEditor::placeElement()
 	else if (editType == ET_ENTITIES)
 	{
 		if (!selectedEntity.nameBased)
-			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, BT_NORMAL, 0, 0, true);
+			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, 0, 0, true);
 		else
-			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, BT_NORMAL, 0, 0, true);
+			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, 0, 0, true);
 	}
 	else if (editType == ET_PATHS)
 	{
@@ -3123,7 +3138,7 @@ void SceneEditor::placeElement()
 		{
 			// new path
 			Path *p = new Path;
-			p->name = "NewPath";
+			p->name = "";
 			PathNode n;
 			n.position = dsq->getGameCursorPosition();
 			p->nodes.push_back(n);
@@ -3531,9 +3546,19 @@ void SceneEditor::update(float dt)
 		else if (isActing(ACTION_ZOOMIN))
 			zoom *= (1 + spd*dt);
 		else if (core->mouse.scrollWheelChange < 0)
-			zoom /= 1.05f;
+        {
+            if (core->getShiftState())
+                nextElement();
+            else
+			    zoom /= 1.05f;
+        }
 		else if (core->mouse.scrollWheelChange > 0)
-			zoom *= 1.05f;
+        {
+            if (core->getShiftState())
+                prevElement();
+            else
+			    zoom *= 1.05f;
+        }
 		if (zoom.x < 0.04f)
 			zoom.x = zoom.y = 0.04f;
 		core->globalScale = zoom;
@@ -3602,11 +3627,12 @@ void SceneEditor::update(float dt)
 			}
 			break;
 			case ES_MOVING:
-				dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+                if (selectedIdx != -1 && selectedNode != -1)
+				    dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
 			break;
 			}
 		}
-		else if (editType == ET_ENTITIES)
+		else if (editType == ET_ENTITIES && editingEntity)
 		{
 			switch(state)
 			{
@@ -3889,6 +3915,35 @@ void SceneEditor::prevEntityType()
 	{
 		prevEntityPage();
 	}
+}
+
+
+
+// FG: --------
+
+void SceneEditor::dumpObs()
+{
+    TileVector tv;
+    const uint32 A = 0xFF000000;
+#define COL(c) (((0x ## c)) | A)
+    const uint32 coltab[5] =
+    {
+        COL(FFFFFF),
+        COL(FFFFFF),
+        COL(000000),
+        COL(FFFFFF),
+        COL(FFFFFF),
+    };
+    unsigned char *data = new unsigned char[MAX_GRID * MAX_GRID * sizeof(uint32)];
+    uint32 *ptr = (uint32*)data;
+    for(tv.y = MAX_GRID - 1; ; --tv.y)
+    {
+        for(tv.x = 0; tv.x < MAX_GRID; ++tv.x)
+            *ptr++ = coltab[game->getGrid(tv)];
+        if(tv.y == 0)
+            break;
+    }
+    core->tgaSave(("griddump-" + game->sceneName + ".tga").c_str(), MAX_GRID, MAX_GRID, 32, data);
 }
 
 

@@ -24,8 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ScriptedEntity.h"
 #include "AutoMap.h"
 #include "GridRender.h"
+#include <VFSFile.h>
 
-#include "../ExternalLibs/tinyxml.h"
+#include "tinyxml.h"
 
 #define MAX_EATS			8
 
@@ -870,7 +871,7 @@ void Continuity::loadTreasureData()
 	std::string line, gfx;
 	int num, use;
 	float sz;
-	std::ifstream in2("data/treasures.txt");
+	VFSTextStdStreamIn in2("data/treasures.txt");
 	while (std::getline(in2, line))
 	{
 		std::istringstream is(line);
@@ -883,7 +884,7 @@ void Continuity::loadTreasureData()
 		d.use = use;
 		treasureData[num] = d;
 	}
-	in2.close();
+	//in2.close();
 }
 
 void Continuity::clearIngredientData()
@@ -903,7 +904,7 @@ void Continuity::loadIngredientData()
 
 	/*
 	int num;
-	std::ifstream in2("data/ingredientdescriptions.txt");
+	VFSTextStreamIn in2("data/ingredientdescriptions.txt");
 	while (std::getline(in2, line))
 	{
 		IngredientDescription desc;
@@ -916,7 +917,7 @@ void Continuity::loadIngredientData()
 	clearIngredientData();
 	recipes.clear();
 
-	std::ifstream in("data/ingredients.txt");
+	VFSTextStdStreamIn in("data/ingredients.txt");
 
 	bool recipes = false;
 	while (std::getline(in, line))
@@ -1097,7 +1098,7 @@ void Continuity::loadIngredientData()
 			}
 		}
 	}
-	in.close();
+	//in.close();
 }
 
 void Continuity::learnFormUpgrade(FormUpgradeType form)
@@ -1241,7 +1242,7 @@ void Continuity::loadEatBank()
 {
 	eats.clear();
 
-	std::ifstream inf("data/eats.txt");
+	VFSTextStdStreamIn inf("data/eats.txt");
 
 	EatData curData;
 	std::string read;
@@ -1287,7 +1288,7 @@ void Continuity::loadEatBank()
 			}
 		}
 	}
-	inf.close();
+	//inf.close();
 }
 
 bool Continuity::hasLi()
@@ -1339,6 +1340,7 @@ int Continuity::getSongBankSize()
 void Continuity::castSong(int num)
 {
 	if (!dsq->continuity.hasSong((SongType)num)) return;
+    //if (dsq->game->avatar->isBlockSinging()) return;
 	Entity *selected = dsq->game->avatar;
 
 	Song *song = getSongByIndex(num);
@@ -2181,7 +2183,7 @@ void Continuity::setActivePet(int flag)
 void Continuity::loadPetData()
 {
 	petData.clear();
-	std::ifstream in("data/pets.txt");
+	VFSTextStdStreamIn in("data/pets.txt");
 	std::string read;
 	while (std::getline(in, read))
 	{
@@ -2191,7 +2193,7 @@ void Continuity::loadPetData()
 		is >> num >> p.namePart;
 		petData.push_back(p);
 	}
-	in.close();
+	//in.close();
 }
 
 PetData *Continuity::getPetData(int idx)
@@ -2883,6 +2885,8 @@ void Continuity::loadFile(int slot)
 		dsq->game->sceneToLoad = startData->Attribute("scene");
 		//dsq->game->transitionToScene();
 	}
+
+    loadSongBank();
 }
 
 void Continuity::setNaijaModel(std::string model)
@@ -3203,12 +3207,12 @@ void Continuity::reset()
 
 	loadTreasureData();
 
-	stringBank.load("data/stringbank.txt");
+	stringBank.load();
 
 	gems.clear();
 	beacons.clear();
 
-	worldMap.load("data/worldmap.txt");
+	worldMap.load();
 
 	ingredients.clear();
 	
@@ -3259,13 +3263,13 @@ void Continuity::reset()
 	health = maxHealth;
 
 	speedTypes.clear();
-	std::ifstream inFile("data/speedtypes.txt");
-	int n, spd;
-	while (inFile >> n)
-	{
-		inFile >> spd;
-		speedTypes.push_back(spd);
-	}
+	VFSTextStreamIn inFile("data/speedtypes.txt");
+    int n, spd;
+    while (inFile >> n)
+    {
+	    inFile >> spd;
+	    speedTypes.push_back(spd);
+    }
 	//selectedSpell = SpellType(0);
 
 	if (!dsq->mod.isActive())

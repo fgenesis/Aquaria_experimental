@@ -31,11 +31,10 @@ public:
 	Vector collideOffset;
 	void updateMovement(float dt);	
 	void entityDied(Entity *e);
-protected:	
+protected:
 	virtual void onHitWall(){}
-	virtual void onHitEntity(const CollideData &c){}
 	void onUpdateFrozen(float dt);
-	
+
 	virtual void onBounce() {}
 	float friction;
 	bool doCusion;

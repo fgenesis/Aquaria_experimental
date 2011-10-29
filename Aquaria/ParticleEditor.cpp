@@ -140,6 +140,9 @@ void ParticleEditor::load()
 
 void ParticleEditor::reload()
 {
+    // FG: HACK
+    core->vfs.Reload(true);
+
 	particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
 	emitter->stop();
 	emitter->load(lastLoadedParticle);

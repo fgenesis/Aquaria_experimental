@@ -19,11 +19,12 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "SkeletalSprite.h"
-#include "../ExternalLibs/tinyxml.h"
+#include "tinyxml.h"
 #include "Core.h"
 #include "Particles.h"
 #include "MathFunctions.h"
 #include "SimpleIStringStream.h"
+#include <VFSFile.h>
 
 std::string SkeletalSprite::animationPath				= "data/animations/";
 std::string SkeletalSprite::skinPath					= "skins/";
@@ -1156,7 +1157,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 
 	stringToLower(file);
 
-	if (!exists(file,1))
+	if (!exists(file))
 	{
 		errorLog("Could not load skin[" + file + "]");
 		return;
@@ -1915,7 +1916,7 @@ void SkeletalSprite::selectPrevBone()
 void SkeletalSprite::selectNextBone()
 {
 	selectedBone--;
-	if (selectedBone < 0)
+	if (selectedBone < 0 || selectedBone >= bones.size())
 		selectedBone = bones.size()-1;
 	updateSelectedBoneColor();
 }

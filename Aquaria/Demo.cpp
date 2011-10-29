@@ -54,7 +54,7 @@ void Demo::togglePlayback(bool on)
 		mode = DEMOMODE_PLAYBACK;
 		time = 0;
 		timeDiff = 0;
-		frame = 0;		
+		frame = 0;
 	}
 	else
 	{
@@ -62,6 +62,7 @@ void Demo::togglePlayback(bool on)
 		core->updateMouse = true;
 		mode = DEMOMODE_NONE;
 	}
+    core->settings.runInBackground = on;
 }
 
 void Demo::renderFramesToDisk()

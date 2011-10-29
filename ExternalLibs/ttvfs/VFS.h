@@ -7,33 +7,59 @@ See VFSDefines.h for compile configration.
 
 
 ---------[ License ]----------
-Copyright (C) 2011 False.Genesis
+MIT License
 
-This software is provided 'as-is', without any express or implied
-warranty. In no event will the authors be held liable for any damages
-arising from the use of this software.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-1. The origin of this software must not be misrepresented; you must not
-   claim that you wrote the original software. If you use this software
-   in a product, an acknowledgment in the product documentation would be
-   appreciated but is not required.
-2. Altered source versions must be plainly marked as such, and must not be
-   misrepresented as being the original software.
-3. This notice may not be removed or altered from any source distribution.
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 */
 
 
 #ifndef TTVFS_VFS_H
 #define TTVFS_VFS_H
 
+#include "VFSDefines.h"
+
+VFS_NAMESPACE_START
+bool _checkCompatInternal(bool large, bool nocase, unsigned int vfspos_size);
+
+/** It is recommended to call this function early in your code
+    and ensure it returns true - if it does not, compiler settings
+    are inconsistent, which may cause otherwise hard to detect problems. */
+inline static bool checkCompat(void)
+{
+#ifdef VFS_LARGEFILE_SUPPORT
+    bool largefile = true;
+#else
+    bool largefile = false;
+#endif
+
+#ifdef VFS_IGNORE_CASE
+    bool nocase = true;
+#else
+    bool nocase = false;
+#endif
+    return _checkCompatInternal(largefile, nocase, sizeof(vfspos));
+}
+VFS_NAMESPACE_END
+
+
 #include <cstring>
 #include <string>
-#include "VFSDefines.h"
 #include "VFSHelper.h"
 #include "VFSFile.h"
 #include "VFSDir.h"

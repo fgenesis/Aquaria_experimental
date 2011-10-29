@@ -40,4 +40,3 @@ void AquariaProgressBar::progress(float perc)
 	core->render();
 	core->showBuffer();
 }
-

@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Game.h"
 
-std::string baseModPath = "_mods/";
+static std::string baseModPath = "_mods/";
 
 void refreshBaseModPath()
 {
@@ -58,11 +58,17 @@ void Mod::clear()
 	active = false;
 	doRecache = 0;
 	debugMenu = false;
+    hasMap = false;
 }
 
 bool Mod::isDebugMenu()
 {
 	return debugMenu;
+}
+
+bool Mod::hasWorldMap()
+{
+    return hasMap;
 }
 
 void Mod::loadModXML(TiXmlDocument *d, std::string modName)
@@ -87,6 +93,10 @@ void Mod::load(const std::string &p)
 	path = baseModPath + p + "/";
 
 	setActive(true);
+
+    // FG: HACK: setup VFS to give mods full control over game content
+    // TODO: find a better place and fix up!
+    //dsq->applyPatch(p);
 	
 	TiXmlDocument d;
 	loadModXML(&d, p);
@@ -112,6 +122,12 @@ void Mod::load(const std::string &p)
 			if (props->Attribute("debugMenu")) {
 				props->Attribute("debugMenu", &debugMenu);
 			}
+
+            if (props->Attribute("hasWorldMap")) {
+                int t;
+                props->Attribute("hasWorldMap", &t);
+                hasMap = t;
+            }
 		}
 	}
 
@@ -145,6 +161,9 @@ std::string Mod::getName()
 
 void Mod::recache()
 {
+    dsq->vfs.Reload(true); // FG: FIXME: this this really necessary? i think so.
+    dsq->applyPatches(); // FG: FIXME: is this a good spot for this?
+
 	if (doRecache)
 	{
 		dsq->precacher.clean();
@@ -225,6 +244,9 @@ void Mod::setActive(bool a)
 	{
 		if (!active)
 		{
+            // FG: revert VFS change so patches from the last mods won't carry over into the main game
+            //dsq->unapplyPatch(name);
+
 			name = path = "";
 			dsq->secondaryTexturePath = "";
 			dsq->sound->audioPath2 = "";
@@ -262,4 +284,30 @@ void Mod::update(float dt)
 		
 		applyStart();
 	}
+}
+
+ModType Mod::getTypeFromXML(TiXmlElement *xml) // should be <AquariaMod>...</AquariaMod> - element
+{
+    if(xml)
+    {
+        TiXmlElement *prop = xml->FirstChildElement("Properties");
+        if(prop)
+        {
+            const char *type = prop->Attribute("type");
+            if(type)
+            {
+                if(!strcmp(type, "mod"))
+                    return MODTYPE_MOD;
+                else if(!strcmp(type, "patch"))
+                    return MODTYPE_PATCH;
+                else
+                {
+                    std::ostringstream os;
+                    os << "Unknown mod type '" << type << "' in XML, default to MODTYPE_MOD";
+                    debugLog(os.str());
+                }
+            }
+        }
+    }
+    return MODTYPE_MOD; // the default
 }

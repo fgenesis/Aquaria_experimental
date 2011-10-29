@@ -1,11 +1,22 @@
 // VFSAtomic.cpp - atomic operations and thread locking
 // For conditions of distribution and use, see copyright notice in VFS.h
 
-/** Atomic operations and thread safety
+/** --- Atomic operations and thread safety ---
   * You may want to add your own implementation if thread safety is needed.
   * If not, just leave everything like it is.
+
   * If you are on windows, Interlocked[In/De]crement is faster than
     explicit mutex locking for integer operations.
+
+  * TODO: The actual locking that is done in the tree when VFS_THREADSAFE is defined
+    is rather crude for the time beeing; a somewhat more efficient ReadWriteLock
+    implementation would be nice to have, someday.
+
+  * If you can, leave VFS_THREADSAFE undefined and do the locking externally,
+    it will probably have much better performance than if each and every operation
+    does a lock and unlock call.
+    (For a rather I/O based library this should not really make a difference, anyway.
+    But don't say you haven't been warned :) )
 */
 
 #include "VFSInternal.h"

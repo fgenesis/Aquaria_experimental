@@ -5,6 +5,7 @@
 
 #include <map>
 #include <vector>
+#include <string>
 
 LVPA_NAMESPACE_START
 
@@ -62,6 +63,7 @@ enum LVPAAlgorithms
     LVPAPACK_LZO1X,
     LVPAPACK_DEFLATE,
     LVPAPACK_LZF,
+    LVPAPACK_LZHAM,
 
     LVPAPACK_MAX_SUPPORTED, // must be after last algo
 
@@ -111,7 +113,8 @@ struct LVPAFileHeader
     LVPAFileHeader()
         : packedSize(0), realSize(0), crcPacked(0), crcReal(0), blockId(0), cipherWarmup(0),
           flags(LVPAFLAG_NONE), algo(LVPAPACK_NONE), level(LVPACOMP_NONE),
-          id(-1), offset(-1), encryption(LVPAENCR_NONE), good(true), otherMem(false), sparePtr(NULL)
+          id(-1), offset(-1), encryption(LVPAENCR_NONE), good(true), checkedCRC(false), checkedCRCPacked(false),
+          otherMem(false), sparePtr(NULL)
     {}
 
     // these are stored in the file
@@ -133,6 +136,8 @@ struct LVPAFileHeader
     memblock data;
     uint8 encryption;
     bool good;
+    bool checkedCRC;
+    bool checkedCRCPacked;
 
     // when a file from a solid block is requested, it gets a pointer to inside solid block's memory.
     // if the file is dropped later, its data.ptr is set to NULL to indicate it must be loaded again.

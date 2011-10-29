@@ -227,9 +227,22 @@ void UserSettings::save()
 		{
 			xml_data.SetAttribute("savePage",			data.savePage);
 			xml_data.SetAttribute("saveSlot",			data.saveSlot);
-			xml_data.SetAttribute("lastSelectedMod",	data.lastSelectedMod);
-		}
+#ifndef AQUARIA_DEMO
+            std::stringstream ss;
+            for (std::set<std::string>::iterator it = dsq->activePatches.begin(); it != dsq->activePatches.end(); ++it)
+                ss << *it << " ";
+			xml_data.SetAttribute("activePatches",	ss.str());
+#endif
+        }
 		doc.InsertEndChild(xml_data);
+
+#ifndef AQUARIA_DEMO
+        TiXmlElement xml_network("Network");
+        {
+            xml_network.SetAttribute("masterServer",    network.masterServer);
+        }
+        doc.InsertEndChild(xml_network);
+#endif
 	}
 	
 #if defined(BBGE_BUILD_UNIX)
@@ -482,9 +495,29 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	{
 		readIntAtt(xml_data, "savePage", &data.savePage);
 		readIntAtt(xml_data, "saveSlot", &data.saveSlot);
-		readIntAtt(xml_data, "lastSelectedMod", &data.lastSelectedMod);
-	}
 
+#ifndef AQUARIA_DEMO
+        if(const char *patchlist = xml_data->Attribute("activePatches"))
+        {
+            std::istringstream ss;
+            ss.str(patchlist);
+            std::string tmp;
+            while(ss)
+            {
+                ss >> tmp;
+                if(tmp.length())
+                    dsq->activePatches.insert(tmp);
+            }
+        }
+#endif
+	}
+#ifndef AQUARIA_DEMO
+    TiXmlElement *xml_network = doc.FirstChildElement("Network");
+    if (xml_network)
+    {
+        network.masterServer = xml_network->Attribute("masterServer");
+    }
+#endif
 	//clearInputCodeMap();
 
 	if (doApply)

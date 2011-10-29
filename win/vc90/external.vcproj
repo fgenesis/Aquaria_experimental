@@ -63,6 +63,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="ws2_32.lib"
 				AdditionalLibraryDirectories=""
 				IgnoreAllDefaultLibraries="true"
 				IgnoreDefaultLibraryNames=""
@@ -108,7 +109,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
@@ -121,7 +122,7 @@
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="false"
-				EnableEnhancedInstructionSet="2"
+				EnableEnhancedInstructionSet="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -138,6 +139,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="ws2_32.lib"
 				IgnoreAllDefaultLibraries="true"
 			/>
 			<Tool
@@ -165,6 +167,14 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath="..\..\ExternalLibs\minihttp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\minihttp.h"
+				>
+			</File>
 			<Filter
 				Name="glpng"
 				>
@@ -324,26 +334,6 @@
 						>
 					</File>
 				</Filter>
-			</Filter>
-			<Filter
-				Name="tinyxml"
-				>
-				<File
-					RelativePath="..\..\ExternalLibs\tinyxml.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\tinyxml.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\tinyxmlerror.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\tinyxmlparser.cpp"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="FTGL"

@@ -33,4 +33,3 @@ protected:
 	Quad spinner;
 	float perc;
 };
-

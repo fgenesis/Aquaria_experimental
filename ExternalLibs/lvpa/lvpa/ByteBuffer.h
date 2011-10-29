@@ -21,7 +21,7 @@ public:
     {
         COPY,  //- Make a copy of the buffer (default action).
         REUSE,   //- Use the passed-in buffer as is.  Requires the pointer
-        //  to remain valid over the life of this object.
+                 //  to remain valid over the life of this object.
         TAKE_OVER, //- Take over the passed-in buffer; it will be deleted on object destruction.
     };
 
@@ -71,6 +71,7 @@ public:
         _allocate(buf.size() + extra + 64);
         append(buf);
     }
+    // del param only used with TAKE_OVER, extra only used with COPY
     ByteBuffer(void *buf, uint32 size, Mode mode = COPY, delete_func del = NULL, uint32 extra = 0)
         : _rpos(0), _wpos(0), _size(size), _buf(NULL), _growable(true), _delfunc(del),
         _mybuf(false) // for mode == REUSE
@@ -266,9 +267,8 @@ public:
     template <typename T> void put(uint32 pos, T value)
     {
         if(pos >= size())
-        {
-            throw Exception(this, "put", sizeof(T))
-        }
+            throw Exception(this, "put", sizeof(T));
+
         ToLittleEndian<T>(value);
         *((T*)(_buf + pos)) = value;
     }
@@ -281,6 +281,11 @@ public:
     void _setPtr(void *p)
     {
         _buf = (uint8*)p;
+    }
+
+    void _setDelFunc(delete_func f)
+    {
+        _delfunc = f;
     }
 
 protected:

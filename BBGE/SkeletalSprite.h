@@ -243,6 +243,7 @@ public:
 	std::vector<Animation> animations;
 	std::vector<Bone*> bones;
 
+    inline int getSelectedBoneIdx(void) { return selectedBone; } // FG: addition
 	void setSelectedBone(int b);
 	void selectPrevBone();
 	void selectNextBone();

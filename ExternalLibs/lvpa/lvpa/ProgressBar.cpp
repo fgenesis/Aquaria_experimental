@@ -1,6 +1,6 @@
 #include "LVPAInternal.h"
 #include "ProgressBar.h"
-#include "tools.h"
+#include "LVPATools.h"
 
 LVPA_NAMESPACE_START
 
@@ -28,6 +28,9 @@ void ProgressBar::Update(bool force /* = false */)
         _perc = ((done + done2) * 100) / total;
     else
         _perc = 0;
+
+    if(_perc > 100)
+        _perc = 100; // HACK
 
     if(force || _oldperc != _perc)
     {
