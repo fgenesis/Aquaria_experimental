@@ -3953,6 +3953,15 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			afterEffectManager->render();
 		}
 
+        if (i == postProcessingFx.layer)
+        {
+            postProcessingFx.preRender();
+        }
+        if (i == postProcessingFx.renderLayer)
+        {
+            postProcessingFx.render();
+        }
+
 		if (darkLayer.isUsed() )
 		{
 			/*
@@ -3970,15 +3979,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			{
 				continue;
 			}
-		}
-
-		if (i == postProcessingFx.layer)
-		{
-			postProcessingFx.preRender();
-		}
-		if (i == postProcessingFx.renderLayer)
-		{
-			postProcessingFx.render();
 		}
 
 		RenderObjectLayer *r = &renderObjectLayers[i];
