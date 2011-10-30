@@ -1251,7 +1251,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	}
 	addRenderObject (cursor, LR_CURSOR);
 
-	user.video.darkbuffersize = MAX(user.video.darkbuffersize,128);
+	//user.video.darkbuffersize = MAX(user.video.darkbuffersize,128);
 
 	dsq->darkLayer.setLayers(LR_ELEMENTS13, LR_AFTER_EFFECTS);
 	debugLog("dark layer init");
@@ -1259,6 +1259,10 @@ This build is not yet final, and as such there are a couple things lacking. They
 	debugLog("dark layer togle...");
 	dsq->darkLayer.toggle(0);
 	debugLog("done");
+
+    debugLog("post FX init");
+    dsq->postProcessingFx.init();
+    debugLog("done");
 
 
 #ifdef AQUARIA_BUILD_CONSOLE
@@ -2029,6 +2033,7 @@ void DSQ::unloadDevice()
 
 	Core::unloadDevice();
 	darkLayer.unloadDevice();
+    postProcessingFx.unloadDevice();
 }
 
 void DSQ::reloadDevice()
@@ -2037,6 +2042,7 @@ void DSQ::reloadDevice()
 
 	Core::reloadDevice();
 	darkLayer.reloadDevice();
+    postProcessingFx.reloadDevice();
 
 	recreateBlackBars();
 }

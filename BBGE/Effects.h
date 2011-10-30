@@ -34,7 +34,7 @@ class PostProcessingFX
 {
 public:
 	PostProcessingFX();
-	void init(FXTypes type);
+    void init();
 	void update(float dt);
 	void preRender();
 	void render();
@@ -42,21 +42,26 @@ public:
 	void enable(FXTypes type);
 	void disable(FXTypes type);
 	bool isEnabled(FXTypes type);
-	void setRenderLayerRange(int start, int end);
+	//void setRenderLayerRange(int start, int end);
+
+    void unloadDevice();
+    void reloadDevice();
 
 
 	/// misc
 	Vector radialBlurColor;
-#ifdef BBGE_BUILD_OPENGL
-	GLenum format;
-#endif
 	int renderLayer;
 	int layer;
 	float intensity;
 	int blendType;
+
+    int textureW, textureH;
+    int windowW, windowH;
+
 protected:
-	int renderLayerStart, renderLayerEnd;
 	bool enabled[FXT_MAX];
+
+    GLuint screenCopy;
 };
 
 
