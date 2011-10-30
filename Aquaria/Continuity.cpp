@@ -1984,12 +1984,15 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 	if (type == WT_SPIRIT)
 	{
 		
-		//core->postProcessingFx.format = GL_LUMINANCE;
-		core->postProcessingFx.blendType = 1;
-		core->postProcessingFx.intensity = 0.2f;
-		core->postProcessingFx.layer = LR_AFTER_EFFECTS;//LR_AFTER_EFFECTS;
-		core->postProcessingFx.renderLayer = LR_AFTER_EFFECTS;
-		core->postProcessingFx.enable(FXT_RADIALBLUR);
+        if(dsq->user.video.blur)
+        {
+		    //core->postProcessingFx.format = GL_LUMINANCE;
+		    core->postProcessingFx.blendType = 1;
+		    core->postProcessingFx.intensity = 0.2f;
+		    core->postProcessingFx.layer = LR_AFTER_EFFECTS;//LR_AFTER_EFFECTS;
+		    core->postProcessingFx.renderLayer = LR_AFTER_EFFECTS;
+		    core->postProcessingFx.enable(FXT_RADIALBLUR);
+        }
 		
 		dsq->game->avatar->canWarp = false;
 
