@@ -26,57 +26,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 PostProcessingFX::PostProcessingFX()
 {
-	//GL_INTENSITY
-	//GL_RGB
-	//GL_LUMINANCE
 	blendType = 0;
 	layer = renderLayer = 0;
 	intensity = 0.1;
+    blurTimes = 12;
 	radialBlurColor = Vector(1,1,1);
 	for (int i = 0; i < FXT_MAX; i++)
 		enabled[i] = false;
-
-    screenCopy = 0;
-}
-
-void PostProcessingFX::unloadDevice()
-{
-#ifdef BBGE_BUILD_OPENGL
-        if (screenCopy)
-        {
-            glDeleteTextures(1, &screenCopy);
-            screenCopy = 0;
-        }
-#endif
-}
-
-void PostProcessingFX::reloadDevice()
-{
-    unloadDevice();
-    init();
 }
 
 void PostProcessingFX::init()
 {
-    if(!core->frameBuffer.isInited())
-    {
-        // create texture
-        textureW = windowW = core->getWindowWidth();
-        textureH = windowH = core->getWindowHeight();
-
-        sizePowerOf2Texture(textureW);
-        sizePowerOf2Texture(textureH);
-
-    #ifdef BBGE_BUILD_OPENGL
-        //create our texture
-        glGenTextures(1,&screenCopy);
-        glBindTexture(GL_TEXTURE_2D, screenCopy);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);		//GL_NEAREST);		//GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);		//GL_NEAREST);		//GL_NEAREST);
-        glTexImage2D(GL_TEXTURE_2D,0,3, textureW, textureH, 0 , GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glBindTexture(GL_TEXTURE_2D,0);
-    #endif
-    }
 }
 
 
@@ -84,40 +44,8 @@ void PostProcessingFX::update(float dt)
 {
 }
 
-/*void PostProcessingFX::setRenderLayerRange(int start, int end)
-{
-	renderLayerStart = start;
-	renderLayerEnd = end;
-}*/
-
 void PostProcessingFX::preRender()
 {
-    //if(!screenCopy || !core->frameBuffer.isEnabled())
-    //    return;
-
-    /*
-    bool mustCapture = false;
-	for (int i = 0; i < FXT_MAX; i++)
-	{
-		if (enabled[i])
-		{
-            mustCapture = true;
-            break;
-        }
-    }
-
-    if(mustCapture)
-    {
-
-#if BBGE_BUILD_OPENGL
-        //glBindTexture(GL_TEXTURE_2D, screenCopy);
-        //glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, textureW, textureH, 0);
-        //glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, windowW, windowH);
-        //glBindTexture(GL_TEXTURE_2D, 0);
-#endif
-
-    }
-    */
 }
 
 void PostProcessingFX::toggle(FXTypes type)
@@ -156,14 +84,15 @@ void PostProcessingFX::render()
 			{
 			case FXT_RADIALBLUR:
 
-                windowW = core->getWindowWidth();
-                windowH = core->getWindowHeight();
-                textureW = core->frameBuffer.getWidth();
-                textureH = core->frameBuffer.getHeight();
+                float windowW = core->getWindowWidth();
+                float windowH = core->getWindowHeight();
+                float textureW = core->frameBuffer.getWidth();
+                float textureH = core->frameBuffer.getHeight();
 
                 float alpha = intensity;
 
                 float offX   = -(core->getVirtualOffX() * windowW / core->getVirtualWidth());
+                float offY   = -(core->getVirtualOffY() * windowH / core->getVirtualHeight());
 
                 float width2 = windowW / 2;
                 float height2 = windowH / 2;
@@ -174,31 +103,27 @@ void PostProcessingFX::render()
                 glLoadIdentity();
 
 
-                glTranslatef(width2 + offX, height2, 0);
+                glTranslatef(width2 + offX, height2 + offY, 0);
 
                 glEnable(GL_TEXTURE_2D);
 
                 core->frameBuffer.bindTexture();
                
                 glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-                //glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+
+                if (blendType == 1)
+                    glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+                else
+                    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
                 float percentX = pw, percentY = ph;
 
-
-                float startx = 0;
-                float starty = 0;
-                float endx = core->width;
-                float endy = core->height;
-
-				int times = 12;
 				float inc = 0.01;
 				float spost = 0.0f;											// Starting Texture Coordinate Offset
-				float alphadec = alpha / times;	
+				float alphadec = alpha / blurTimes;
 
 				glBegin(GL_QUADS);											// Begin Drawing Quads
-					for (int num = 0;num < times;num++)						// Number Of Times To Render Blur
+					for (int num = 0;num < blurTimes; num++)						// Number Of Times To Render Blur
 					{
 						glColor4f(radialBlurColor.x, radialBlurColor.y, radialBlurColor.z, alpha);					// Set The Alpha Value (Starts At 0.2)
 

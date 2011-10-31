@@ -2033,7 +2033,6 @@ void DSQ::unloadDevice()
 
 	Core::unloadDevice();
 	darkLayer.unloadDevice();
-    postProcessingFx.unloadDevice();
 }
 
 void DSQ::reloadDevice()
@@ -2042,7 +2041,6 @@ void DSQ::reloadDevice()
 
 	Core::reloadDevice();
 	darkLayer.reloadDevice();
-    postProcessingFx.reloadDevice();
 
 	recreateBlackBars();
 }

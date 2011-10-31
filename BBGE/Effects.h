@@ -42,26 +42,19 @@ public:
 	void enable(FXTypes type);
 	void disable(FXTypes type);
 	bool isEnabled(FXTypes type);
-	//void setRenderLayerRange(int start, int end);
 
-    void unloadDevice();
-    void reloadDevice();
-
-
-	/// misc
+	// blur
 	Vector radialBlurColor;
+    int blurTimes;
+
+    /// misc
 	int renderLayer;
 	int layer;
 	float intensity;
 	int blendType;
 
-    int textureW, textureH;
-    int windowW, windowH;
-
 protected:
 	bool enabled[FXT_MAX];
-
-    GLuint screenCopy;
 };
 
 
