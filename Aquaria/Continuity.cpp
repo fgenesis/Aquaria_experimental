@@ -3230,7 +3230,7 @@ void Continuity::reset()
 	if(dsq->mod.isActive())
 	{
 		//load mod ingredients
-		loadIngredientData(dsq->mod.getPath() + "data/ingredients.txt");
+		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
 	}
 
 	//load ingredients for the main game
