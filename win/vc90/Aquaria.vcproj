@@ -62,9 +62,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="SDLmain.lib"
 				OutputFile="$(OutDir)\$(ProjectName)d.exe"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="$(SolutionDir)\..\ExternalLibs\SDL12\lib\win32"
 				IgnoreDefaultLibraryNames="msvcrt.lib"
 				GenerateDebugInformation="true"
 				SubSystem="1"
@@ -145,8 +146,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="SDLmain.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_fg.exe"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(SolutionDir)\..\ExternalLibs\SDL12\lib\win32"
 				IgnoreDefaultLibraryNames="msvcrt.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"

@@ -864,7 +864,6 @@ const float SORT_DELAY = 10;
 Core::Core(const std::string &filesystem, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
 {
-    _logOut.open((debugLogPath + "debug.log").c_str());
     sound = NULL;
 	screenCapScale = Vector(1,1,1);
 	timeUpdateType = TIMEUPDATE_DYNAMIC;
@@ -903,6 +902,11 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	debugLogActive = true;
 
 	debugLogTextures = true;
+
+    _logOut.open((debugLogPath + "debug.log").c_str());
+
+    debugLog("Program directory: \"" + GetProgramDir() + '"');
+    debugLog("Working directory: \"" + GetWorkingDir() + '"');
 	
 	grabInputOnReentry = -1;
 

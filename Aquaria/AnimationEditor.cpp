@@ -758,7 +758,7 @@ void AnimationEditor::update(float dt)
 	}
 	if (editingBone && boneEdit == 1)
 	{
-		editingBone->position = core->mouse.position - editSprite->position + cursorOffset /*+ core->getVirtualOffX()*/;
+		editingBone->position = core->mouse.position - editSprite->position + cursorOffset;
 		constrainMouse();
 	}
 	if (editingBone && boneEdit == 2)

@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef BBGE_BUILD_WINDOWS
 	#include <shellapi.h>
+    #include <direct.h>
 #endif
 
 #if defined(BBGE_BUILD_UNIX)
@@ -34,6 +35,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #if defined(BBGE_BUILD_MACOSX)
 	#include <Carbon/Carbon.h>
+    #include <sys/param.h>
 #endif
 
 #include <assert.h>
@@ -868,12 +870,13 @@ GLuint generateEmptyTexture(int quality)											// Create An Empty Texture
 	return txtnumber;											// Return The Texture ID
 }
 
-Vector randVector(int mag)
+Vector randVector(float mag)
 {
 	// FIXME: Is this really what you wanted?  I'd suggest:
 	//     float angle = (rand() / (float)RAND_MAX) * PI;
         // --achurch
-	float angle = (rand()&314);
+	//float angle = (rand()&314);
+    float angle = (rand() / (float)RAND_MAX) * PI; // FG: done that.
 	float x = sinf(angle), y = cosf(angle);
 	return Vector(x*mag, y*mag);
 }
@@ -1183,4 +1186,85 @@ std::string spacesToUnderscores(const std::string &str)
 	for (int i = 0; i < s.size(); i++)
 		if (s[i] == ' ') s[i] = '_';
 	return s;
+}
+
+
+// FG: copied over from LV3
+
+// fix filenames for linux ( '/' instead of windows '\')
+static void _FixFileName(std::string& str)
+{
+    for(uint32 i = 0; i < str.length(); i++)
+        if(str[i]=='\\')
+            str[i]='/';
+}
+
+// taken from a post from http://www.gamedev.net/topic/459511-something-like-getmodulefilename-in-linux/
+std::string GetProgramDir(void)
+{
+#if defined(BBGE_BUILD_WINDOWS)
+    char szPath[1024];
+    uint32 len = GetModuleFileName( NULL, szPath, 1024 );
+    if(!len)
+        return "";
+    std::string path(szPath);
+    std::string::size_type t = path.find_last_of("/\\");
+    path = path.substr(0,t);
+    _FixFileName(path);
+    return path;
+
+#elif defined(BBGE_BUILD_MACOSX)
+
+    char parentdir[MAXPATHLEN];
+    std::string path;        
+    CFURLRef url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFURLRef url2 = CFURLCreateCopyDeletingLastPathComponent(0, url);
+    if (CFURLGetFileSystemRepresentation(url2, 1, (UInt8 *)parentdir, MAXPATHLEN))
+    {
+        path = parentdir;   /* chdir to the binary app's parent */
+    }
+    CFRelease(url);
+    CFRelease(url2);
+    return path;
+
+#elif defined(BBGE_BUILD_UNIX)
+
+    std::stringstream ss;
+    ss << "/proc/" << getpid() << "/exe";
+    char proc[1024];
+    int ch = readlink(ss.str().c_str(), proc, 1024);
+    std::string path;
+    if (ch != -1)
+    {
+        proc[ch] = 0;
+        path = proc;
+        std::string::size_type t = path.find_last_of("/");
+        path = path.substr(0,t);
+    }
+    return path;
+
+#endif
+}
+
+bool SetWorkingDir(const std::string& d)
+{
+#if defined(BBGE_BUILD_WINDOWS)
+    return !_chdir(d.c_str());
+#elif defined(BBGE_BUILD_UNIX) || defined(BBGE_BUILD_MACOSX)
+    return !chdir(d.c_str());
+#endif
+}
+
+std::string GetWorkingDir(void)
+{
+    char *wd;
+#if defined(BBGE_BUILD_WINDOWS)
+    wd = _getcwd(NULL, 0);
+#elif defined(BBGE_BUILD_UNIX) || defined(BBGE_BUILD_MACOSX)
+    wd = getcwd(NULL, 0);
+#endif
+    std::string cp = wd;
+    free(wd);
+    _FixFileName(cp);
+    return cp;
 }

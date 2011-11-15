@@ -137,7 +137,7 @@ static bool InitContainerFile(void)
 }
 
 
-#if defined(BBGE_BUILD_WINDOWS) && defined(AQUARIA_WIN32_NOCONSOLE)
+#if defined(BBGE_BUILD_WINDOWS) && defined(AQUARIA_WIN32_NO_SDLMAIN)
 	int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 						HINSTANCE	hPrevInstance,		// Previous Instance
 						LPSTR		lpCmdLine,			// Command Line Parameters
@@ -153,52 +153,9 @@ static bool InitContainerFile(void)
 
 #elif defined(BBGE_BUILD_SDL)
 
-	static inline void check_beta(void)
-	{
-		#if defined(BBGE_BUILD_UNIX) && defined(BETAEXPIRE)
-		bool bail = false;
-
-		fprintf(stderr, "\n\n\n");
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "*********************************************************\n");
-
-		if ( time(NULL) > (BETAEXPIRE + 14 * 24 * 60 * 60) ) {
-			fprintf(stderr,
-				"Sorry, but this beta of the game has expired, and will no\n"
-				" longer run. This is to prevent tech support on out-of-date\n"
-				" and prerelease versions of the game. Please go to\n"
-				" http://www.bit-blot.com/ for information on getting a release\n"
-				" version that does not expire.\n");
-			bail = true;
-		} else {
-			fprintf(stderr, "     Warning: This is a beta version of AQUARIA.\n");
-		}
-
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "*********************************************************\n");
-		fprintf(stderr, "\n\n\n");
-
-		fflush(stderr);
-
-		if (bail) {
-			while (true) {
-				_exit(0);
-			}
-		}
-		#endif
-	}
-
 	extern "C" int main(int argc,char *argv[])
 	{
         main_procname = argv[0];
-
-		check_beta();
 
 		std::string dsqParam = ""; // fileSystem
 

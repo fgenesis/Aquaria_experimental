@@ -1,22 +1,34 @@
 cmake_minimum_required(VERSION 2.6)
 project(lvpa)
 
+## BBGE stuff
 
-option(LVPA_ENABLE_ZLIB "Add zlib/deflate support" TRUE)
-option(LVPA_ENABLE_LZMA "Add LZMA support" TRUE)
-option(LVPA_ENABLE_LZO "Add LZO support" FALSE)
-option(LVPA_ENABLE_LZF "Add LZF support" TRUE)
-option(LVPA_ENABLE_LZHAM "Add LZHAM support" TRUE)
+set(LVPA_ENABLE_LZMA TRUE)
+set(LVPA_ENABLE_LZF TRUE)
+set(LVPA_ENABLE_LZHAM TRUE)
 
-option(LVPA_BUILD_TTVFS_BINDINGS "Build bindings for ttvfs?" FALSE)
+set(LVPA_USE_INTERNAL_LZMA TRUE)
+set(LVPA_USE_INTERNAL_LZF TRUE)
+set(LVPA_USE_INTERNAL_LZHAM TRUE)
+
+set(LVPA_BUILD_TTVFS_BINDINGS TRUE)
+
+
+#option(LVPA_ENABLE_ZLIB "Add zlib/deflate support" TRUE)
+#option(LVPA_ENABLE_LZMA "Add LZMA support" TRUE)
+#option(LVPA_ENABLE_LZO "Add LZO support" FALSE)
+#option(LVPA_ENABLE_LZF "Add LZF support" TRUE)
+#option(LVPA_ENABLE_LZHAM "Add LZHAM support" TRUE)
+
+#option(LVPA_BUILD_TTVFS_BINDINGS "Build bindings for ttvfs?" FALSE)
 option(LVPA_BUILD_LVPAK "Build lvpak commandline utility?" TRUE)
-option(LVPA_BUILD_TESTPROG "Build test program?" TRUE)
+#option(LVPA_BUILD_TESTPROG "Build test program?" TRUE)
 
-option(LVPA_USE_INTERNAL_ZLIB "Use included zlib" TRUE)
-option(LVPA_USE_INTERNAL_LZMA "Use included LZMA libary" TRUE)
-option(LVPA_USE_INTERNAL_LZO "Use included LZO library" TRUE)
-option(LVPA_USE_INTERNAL_LZF "Use included LZF library" TRUE)
-option(LVPA_USE_INTERNAL_LZHAM "Use included LZHAM library" TRUE)
+#option(LVPA_USE_INTERNAL_ZLIB "Use included zlib" TRUE)
+#option(LVPA_USE_INTERNAL_LZMA "Use included LZMA libary" TRUE)
+#option(LVPA_USE_INTERNAL_LZO "Use included LZO library" TRUE)
+#option(LVPA_USE_INTERNAL_LZF "Use included LZF library" TRUE)
+#option(LVPA_USE_INTERNAL_LZHAM "Use included LZHAM library" TRUE)
 
 
 # compiler specific things
@@ -55,7 +67,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(LVPA_DEP_LIBS "")
 
 if(LVPA_ENABLE_ZLIB)
-    add_definitions("-DLVPA_SUPPORT_ZLIB")
+    #add_definitions("-DLVPA_SUPPORT_ZLIB")
     if(LVPA_USE_INTERNAL_ZLIB)
         add_subdirectory(zlib)
     endif()
@@ -63,7 +75,7 @@ if(LVPA_ENABLE_ZLIB)
 endif()
 
 if(LVPA_ENABLE_LZO)
-    add_definitions("-DLVPA_SUPPORT_LZO")
+    #add_definitions("-DLVPA_SUPPORT_LZO")
     if(LVPA_USE_INTERNAL_LZO)
         add_subdirectory(lzo)
     endif()
@@ -71,7 +83,7 @@ if(LVPA_ENABLE_LZO)
 endif()
 
 if(LVPA_ENABLE_LZMA)
-    add_definitions("-DLVPA_SUPPORT_LZMA")
+    #add_definitions("-DLVPA_SUPPORT_LZMA")
     if(LVPA_USE_INTERNAL_LZMA)
         add_subdirectory(lzma)
     endif()
@@ -79,7 +91,7 @@ if(LVPA_ENABLE_LZMA)
 endif()
 
 if(LVPA_ENABLE_LZF)
-    add_definitions("-DLVPA_SUPPORT_LZF")
+    #add_definitions("-DLVPA_SUPPORT_LZF")
     if(LVPA_USE_INTERNAL_LZF)
         add_subdirectory(lzf)
     endif()
@@ -87,7 +99,7 @@ if(LVPA_ENABLE_LZF)
 endif()
 
 if(LVPA_ENABLE_LZHAM)
-    add_definitions("-DLVPA_SUPPORT_LZHAM")
+    #add_definitions("-DLVPA_SUPPORT_LZHAM")
     if(LVPA_USE_INTERNAL_LZHAM)
         add_subdirectory(lzham)
     endif()

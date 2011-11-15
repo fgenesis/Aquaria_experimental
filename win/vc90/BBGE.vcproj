@@ -604,6 +604,18 @@
 				RelativePath="..\..\BBGE\BBGECompileConfig.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\GL\gl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\GL\gles.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\GL\glext.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

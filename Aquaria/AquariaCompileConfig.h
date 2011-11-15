@@ -10,9 +10,10 @@
 //#define AQUARIA_CUSTOM_BUILD_ID "-community"
 
 // no console window in release mode (note: use together with linker SubSystem setting)
-#ifdef NDEBUG
-#  define AQUARIA_WIN32_NOCONSOLE
-#endif
+// (FG: This setting is deprecated. However, it should work if linking SDLmain causes trouble for some reason)
+//#ifdef NDEBUG
+//#  define AQUARIA_WIN32_NO_SDLMAIN
+//#endif
 
 // start Aqconfig.exe if unclean shutdown or first start detected
 #define AQUARIA_WIN32_AQCONFIG
