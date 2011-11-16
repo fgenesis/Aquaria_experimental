@@ -52,6 +52,10 @@ Core *core = 0;
 	HICON icon_windows = 0;
 #endif
 
+#ifdef BBGE_BUILD_WINDOWS
+    #include <shlobj.h>
+#endif
+
 void Core::initIcon()
 {
 #ifdef BBGE_BUILD_WINDOWS
@@ -895,8 +899,44 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	std::string prefpath(getPreferencesFolder());
 	mkdir(prefpath.c_str(), 0700);
 #else
-	debugLogPath = "";
+
+    debugLogPath = "";
     userDataFolder = "."; // FG: DOES THIS EVEN WORK??
+
+    #ifdef BBGE_BUILD_WINDOWS
+    {
+        bool writeable = false;
+
+        FILE *fh = fopen("check_write.tmp", "w");
+        if(fh)
+        {
+            writeable = fwrite("abcdef", 5, 1, fh) == 1;
+            fclose(fh);
+            unlink("check_write.tmp");
+            debugLog("Using working directory as user directory.");
+        }
+        
+        if(!writeable)
+        {
+            debugLog("Working directory is not writeable...");
+            char pathbuf[MAX_PATH];
+            if(SHGetSpecialFolderPathA(NULL, &pathbuf[0], CSIDL_APPDATA, 0))
+            {
+                userDataFolder = pathbuf;
+                userDataFolder += "/.Aquaria";
+                for(uint32 i = 0; i < userDataFolder.length(); ++i)
+                    if(userDataFolder[i] == '\\')
+                        userDataFolder[i] = '/';
+                debugLogPath = userDataFolder + "/";
+                debugLog("Using \"" + userDataFolder + "\" as user directory.");
+            }
+            else
+                debugLog("Failed to retrieve appdata path, using working dir.");
+        }
+    }
+    #endif
+
+
 #endif
 	
 	debugLogActive = true;
