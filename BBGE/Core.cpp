@@ -904,9 +904,6 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	debugLogTextures = true;
 
     _logOut.open((debugLogPath + "debug.log").c_str());
-
-    debugLog("Program directory: \"" + GetProgramDir() + '"');
-    debugLog("Working directory: \"" + GetWorkingDir() + '"');
 	
 	grabInputOnReentry = -1;
 
@@ -994,6 +991,9 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	initRenderObjectLayers(numRenderLayers);
 
 	initPlatform(filesystem);
+
+    debugLog("Program directory: \"" + GetProgramDir() + '"');
+    debugLog("Working directory: \"" + GetWorkingDir() + '"');
 }
 
 void Core::initPlatform(const std::string &filesystem)
@@ -4933,6 +4933,12 @@ void Core::setupVFS(const char *extradir /* = NULL */)
 
 #ifdef _DEBUG
     _DumpVFS("begin");
+#endif
+
+#ifdef BBGE_BUILD_MACOSX
+    // we assume the working dir is something like "/Applications/Aquaria-fg.app",
+    // and that the commercial game resides at "/Applications/Aquaria.app".
+    vfs.MountExternalPath("../Aquaria.app");
 #endif
 
 

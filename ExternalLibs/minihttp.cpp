@@ -12,6 +12,7 @@
 #include <string.h>
 #include <sstream>
 #include <cctype>
+#include <cerrno>
 #include <algorithm>
 
 #ifdef _WIN32
@@ -34,8 +35,8 @@
 #  include <netdb.h>
 #  define SOCKET_ERROR -1
 #  define INVALID_SOCKET -1
-#  typedef int SOCKET
-#  define MAKESOCKET(s) ((SOCKET)(s))
+typedef int SOCKET;
+#  define MAKESOCKET(s) ((SOCKET)(size_t)(s))
 #  define CASTSOCKET(s) ((void*)(s))
 #endif
 
@@ -205,7 +206,7 @@ void HttpSocket::close(void)
 #ifdef _WIN32
     ::closesocket((SOCKET)_s);
 #else
-    ::close(_s);
+    ::close(MAKESOCKET(_s));
 #endif
     _s = CASTSOCKET(INVALID_SOCKET);
 
