@@ -12,10 +12,6 @@ IF(APPLE)
     SET(MACOSX TRUE)
 ENDIF(APPLE)
 
-IF(WIN32)
-    OPTION(AQUARIA_NO_CONSOLE "No console window?" FALSE)
-ENDIF(WIN32)
-
 # No Steamworks SDK for Linux at the moment. Roll our own achievements.
 ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
 
@@ -31,8 +27,19 @@ SET(LUADIR ${EXTLIBDIR}/lua-5.1.4)
 SET(LUASRCDIR ${LUADIR}/src)
 SET(LIBOGGDIR ${EXTLIBDIR}/libogg-1.2.0)
 SET(LIBVORBISDIR ${EXTLIBDIR}/libvorbis-1.3.1)
+SET(ZLIBDIR ${EXTLIBDIR}/zlib)
 
 ################ Look for external libraries
+
+### zlib
+
+OPTION(AQUARIA_INTERNAL_ZLIB "Always use included zlib library" FALSE)
+if(NOT AQUARIA_INTERNAL_ZLIB)
+    find_package(ZLIB)
+endif(NOT AQUARIA_INTERNAL_ZLIB)
+if(NOT ZLIB_FOUND)
+    set(ZLIB_INCLUDE_DIRS ${ZLIBDIR})
+endif(NOT ZLIB_FOUND)
 
 ### FreeType
 
@@ -163,7 +170,7 @@ INCLUDE_DIRECTORIES(${BBGEDIR})
 
 INCLUDE_DIRECTORIES(${EXTLIBDIR})
 INCLUDE_DIRECTORIES(${EXTLIBDIR}/GL)
-INCLUDE_DIRECTORIES(${EXTLIBDIR}/glpng/zlib)
+INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${SRCDIR})
 INCLUDE_DIRECTORIES(${FTGLDIR}/include)
 INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
@@ -284,6 +291,7 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/MiniMapRender.cpp
     ${SRCDIR}/Mod.cpp
     ${SRCDIR}/ModSelector.cpp
+    ${SRCDIR}/Network.cpp
     ${SRCDIR}/ParticleEditor.cpp
     ${SRCDIR}/Path.cpp
     ${SRCDIR}/PathFinding.cpp
@@ -383,6 +391,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/glfont2.cpp
     ${BBGEDIR}/VFSFileStream.cpp
     ${COCOA_SRCS}
+    ${EXTLIBDIR}/minihttp.cpp
     ${EXTLIBDIR}/glpng/glpng.c
     ${EXTLIBDIR}/glpng/png/png.c
     ${EXTLIBDIR}/glpng/png/pngerror.c
@@ -412,10 +421,24 @@ SET(BBGE_SRCS_UNUSED
 IF(CMAKE_COMPILER_IS_GNUCC)
     SET_SOURCE_FILES_PROPERTIES(
         ${SRCDIR}/DemoContainerKeygen.cpp
+        ${SRCDIR}/Network.cpp
         ${BBGEDIR}/FmodOpenALBridge.cpp
         PROPERTIES COMPILE_FLAGS "-fpermissive"
     )
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
+
+SET(ZLIB_SRCS
+    ${ZLIBDIR}/adler32.c
+    ${ZLIBDIR}/crc32.c
+    ${ZLIBDIR}/compress.c
+    ${ZLIBDIR}/deflate.c
+    ${ZLIBDIR}/inffast.c
+    ${ZLIBDIR}/inflate.c
+    ${ZLIBDIR}/inftrees.c
+    ${ZLIBDIR}/trees.c
+    ${ZLIBDIR}/uncompr.c
+    ${ZLIBDIR}/zutil.c
+)
 
 SET(FTGL_SRCS
     ${FTGLSRCDIR}/FTCharmap.cpp
@@ -552,10 +575,15 @@ SET(LUA_SRCS
     ${LUASRCDIR}/lmathlib.c
 )
 
+IF(AQUARIA_INTERNAL_ZLIB)
+    ADD_LIBRARY(zlib ${ZLIB_SRCS})
+    SET(ZLIB_LIBRARIES "zlib")
+ENDIF(AQUARIA_INTERNAL_ZLIB)
+
 ADD_SUBDIRECTORY(ExternalLibs/ttvfs)
 ADD_SUBDIRECTORY(ExternalLibs/lvpa)
 
-SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ttvfs lvpa lvpa_ttvfs zlib)
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ttvfs lvpa lvpa_ttvfs)
 
 
 IF(MACOSX)
@@ -567,11 +595,12 @@ ENDIF(MACOSX)
 
 SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${SDL_LIBRARY})
 SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OPENAL_LIBRARY})
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${ZLIB_LIBRARIES})
 
 ## OpenGL (for mingw)
 IF(WIN32)
     IF(CMAKE_COMPILER_IS_GNUCC)
-        SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} glu32 opengl32)
+        SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} glu32 opengl32 ws2_32)
     ENDIF(CMAKE_COMPILER_IS_GNUCC)
 ENDIF(WIN32)
 

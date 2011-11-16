@@ -69,8 +69,7 @@ BlockingQueue<SocketInitialData*> NQ;
 
 struct FileDownloadInfos
 {
-    FileDownloadInfos() : buf(NULL), inMem(false),
-        cb(NULL), user1(NULL), user2(0) {}
+    FileDownloadInfos() : inMem(false), cb(NULL), user1(NULL), user2(0) {}
     std::string name;
     lvpa::ByteBuffer buf;
     bool inMem;

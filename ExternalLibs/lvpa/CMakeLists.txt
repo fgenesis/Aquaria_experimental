@@ -6,10 +6,12 @@ project(lvpa)
 set(LVPA_ENABLE_LZMA TRUE)
 set(LVPA_ENABLE_LZF TRUE)
 set(LVPA_ENABLE_LZHAM TRUE)
+set(LVPA_ENABLE_ZLIB TRUE)
 
 set(LVPA_USE_INTERNAL_LZMA TRUE)
 set(LVPA_USE_INTERNAL_LZF TRUE)
 set(LVPA_USE_INTERNAL_LZHAM TRUE)
+set(LVPA_USE_INTERNAL_ZLIB FALSE)
 
 set(LVPA_BUILD_TTVFS_BINDINGS TRUE)
 
@@ -21,7 +23,7 @@ set(LVPA_BUILD_TTVFS_BINDINGS TRUE)
 #option(LVPA_ENABLE_LZHAM "Add LZHAM support" TRUE)
 
 #option(LVPA_BUILD_TTVFS_BINDINGS "Build bindings for ttvfs?" FALSE)
-option(LVPA_BUILD_LVPAK "Build lvpak commandline utility?" TRUE)
+option(LVPA_BUILD_LVPAK "Build lvpak commandline utility?" FALSE)
 #option(LVPA_BUILD_TESTPROG "Build test program?" TRUE)
 
 #option(LVPA_USE_INTERNAL_ZLIB "Use included zlib" TRUE)
