@@ -52,7 +52,7 @@ static bool _CreateLocalPackageName(const std::string& url, std::string& plainNa
     if(pos != std::string::npos && pos2 != std::string::npos)
     {
         plainName = url.substr(pos+1, pos2-pos-1);
-        localName = "_mods/" + plainName + ".aqmod";
+        localName = dsq->mod.getBaseModPath() + plainName + ".aqmod";
         return true;
     }
     return false;
@@ -665,11 +665,9 @@ void ModIcon::loadEntry(const ModEntry& entry)
     fname = entry.path;
 
     std::string texToLoad = entry.path + "/" + "mod-icon";
-#if defined(BBGE_BUILD_UNIX)
-    texToLoad = dsq->getUserDataFolder() + "/_mods/" + texToLoad;
-#else
-    texToLoad = "./_mods/" + texToLoad;
-#endif
+
+    texToLoad = dsq->mod.getBaseModPath() + texToLoad;
+
     setTexture(texToLoad);
     width = height = MOD_ICON_SIZE;
 

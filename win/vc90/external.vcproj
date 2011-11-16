@@ -931,10 +931,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\zlib\example.c"
-					>
-				</File>
-				<File
 					RelativePath="..\..\ExternalLibs\zlib\gzclose.c"
 					>
 				</File>

@@ -241,10 +241,18 @@ std::string FixSlashes(const std::string& s)
 
 std::string FixPath(const std::string& s)
 {
+    if(s.empty())
+        return s;
     const char *p = s.c_str();
     while(p[0] == '.' && p[1] == '/')
         p += 2;
-    return FixSlashes(p == s.c_str() ? s : p); // avoid hidden re-allocation when pointer was not moved
+    char end = s[s.length() - 1];
+    if( !(end == '/' || end == '\\') ) // early check
+        return FixSlashes(p == s.c_str() ? s : p); // avoid hidden re-allocation when pointer was not moved
+
+    std::string r = FixSlashes(s);
+    r.erase(s.length() - 1); // strip trailing '/'
+    return r;
 }
 
 bool IsDirectory(const char *s)
@@ -290,6 +298,9 @@ std::string StripFileExtension(const std::string& s)
 
 std::string StripLastPath(const std::string& s)
 {
+    if(s.empty())
+        return "";
+
     if(s[s.length() - 1] == '/')
         return StripLastPath(s.substr(0, s.length() - 1));
 

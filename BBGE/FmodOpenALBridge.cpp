@@ -505,6 +505,11 @@ namespace FMOD {
     #define SANITY_CHECK_OPENAL_CALL()
 #endif
 
+#ifdef __APPLE__
+#undef SANITY_CHECK_OPENAL_CALL
+#define SANITY_CHECK_OPENAL_CALL()
+#endif
+
 
 // simply nasty.
 #define ALBRIDGE(cls,method,params,args) \

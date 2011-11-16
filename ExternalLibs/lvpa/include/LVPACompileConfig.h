@@ -7,7 +7,7 @@
 // if not configuring via CMake or setting these externally,
 // use these to enable a set of compression algorithms to use.
 //#define LVPA_SUPPORT_ZLIB
-//#define LVPA_SUPPORT_LZMA
+#define LVPA_SUPPORT_LZMA
 //#define LVPA_SUPPORT_LZO
 #define LVPA_SUPPORT_LZF
 #define LVPA_SUPPORT_LZHAM

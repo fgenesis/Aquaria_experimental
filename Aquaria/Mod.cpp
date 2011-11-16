@@ -21,13 +21,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Game.h"
 
-static std::string baseModPath = "_mods/";
+static std::string baseModPath = "./_mods/";
 
 void refreshBaseModPath()
 {
-#if defined(BBGE_BUILD_UNIX)
-	baseModPath = dsq->getUserDataFolder() + "/_mods/";
-#endif
+    baseModPath = dsq->getUserDataFolder() + "/_mods/";
 }
 
 Mod::Mod()

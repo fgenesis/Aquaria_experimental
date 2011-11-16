@@ -929,6 +929,7 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
                         userDataFolder[i] = '/';
                 debugLogPath = userDataFolder + "/";
                 debugLog("Using \"" + userDataFolder + "\" as user directory.");
+                ::CreateDirectoryA(userDataFolder.c_str(), NULL);
             }
             else
                 debugLog("Failed to retrieve appdata path, using working dir.");
@@ -4315,7 +4316,7 @@ std::string Core::getInternalTextureName(const std::string &name)
 	return n;
 }
 
-#define ISPATHROOT(x) (x[0] == '.' || x[0] == '/')
+#define ISPATHROOT(x) (x[0] == '.' || x[0] == '/' || ((x).length() > 1 && x[1] == ':'))
 
 std::string Core::getTextureLoadName(const std::string &texture)
 {
@@ -4997,8 +4998,8 @@ void Core::setupVFS(const char *extradir /* = NULL */)
         else
             delete patch;
     }
-    //if(!gotfix)
-    //    errorLog("WARNING: _hackfixes.lvpa not found or corrupt, this will likely screw up this experimental version!");
+    if(!gotfix)
+        errorLog("WARNING: _hackfixes.lvpa not found or corrupt, this will likely screw up this experimental version!");
 
     //vfs.Mount("_patch", "_mods", true); // TEMP: until i organize my file system.
 #endif

@@ -422,6 +422,42 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="lzma"
+				>
+				<File
+					RelativePath="..\..\ExternalLibs\lvpa\lzma\LzFind.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\lvpa\lzma\LzFind.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\lvpa\lzma\LzHash.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\lvpa\lzma\LzmaDec.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\lvpa\lzma\LzmaDec.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\lvpa\lzma\LzmaEnc.c"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\lvpa\lzma\LzmaEnc.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\lvpa\lzma\LzTypes.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

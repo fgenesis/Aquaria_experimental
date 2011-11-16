@@ -244,6 +244,7 @@ inline static VFSFile *VFSHelper_GetFileByLoader(VFSLoader *ldr, const char *fn,
     VFSFile *vf = ldr->Load(fn);
     if(vf)
     {
+        VFS_GUARD_OPT(this);
         root->addRecursive(vf, true);
         --(vf->ref);
     }
@@ -288,13 +289,64 @@ VFSFile *VFSHelper::GetFile(const char *fn)
     return vf;
 }
 
+inline static VFSDir *VFSHelper_GetDirByLoader(VFSLoader *ldr, const char *fn, VFSDir *root)
+{
+    if(!ldr)
+        return NULL;
+    VFSDir *vd = ldr->LoadDir(fn);
+    if(vd)
+    {
+        std::string parentname = StripLastPath(fn);
+
+        VFS_GUARD_OPT(this);
+        VFSDir *parent = parentname.empty() ? root : root->getDir(parentname.c_str(), true);
+        parent->insert(vd, true);
+        --(vd->ref); // should delete it
+
+        vd = root->getDir(fn); // can't return vd directly because it is cloned on insert+merge, and already deleted here
+    }
+    return vd;
+}
+
 VFSDir *VFSHelper::GetDir(const char* dn, bool create /* = false */)
 {
     while(dn[0] == '.' && dn[1] == '/')
         dn += 2;
 
-    VFS_GUARD_OPT(this);
-    return (merged && *dn) ? merged->getDir(dn, create) : merged;
+    VFSDir *vd;
+    {
+        VFS_GUARD_OPT(this);
+        if(!merged)
+            return NULL;
+        if(!*dn)
+            return merged;
+        vd = merged->getDir(dn);
+    }
+
+    if(!vd && create)
+    {
+        for(unsigned int i = 0; i < fixedLdrs.size(); ++i)
+            if((vd = VFSHelper_GetDirByLoader(fixedLdrs[i], dn, GetDirRoot())))
+                break;
+
+        if(!vd)
+        {
+            VFS_GUARD_OPT(this);
+            for(LoaderList::iterator it = dynLdrs.begin(); it != dynLdrs.end(); ++it)
+                if((vd = VFSHelper_GetDirByLoader(*it, dn, GetDirRoot())))
+                    break;
+        }
+
+        if(!vd)
+        {
+            VFS_GUARD_OPT(this);
+            vd = merged->getDir(dn, true);
+        }
+    }
+
+    //printf("VFS: GetDir '%s' -> '%s' (%p)\n", dn, vd ? vd->fullname() : "NULL", vd);
+
+    return vd;
 }
 
 VFSDir *VFSHelper::GetDirRoot(void)

@@ -2213,15 +2213,18 @@ ModEntry* DSQ::getSelectedModEntry()
 
 void DSQ::loadMods()
 {
+    debugLog("Load mods...");
 	modEntries.clear();
 
 #ifndef AQUARIA_DEMO
 
     // force VFS to reload _mods dir
-    if(ttvfs::VFSDir *vd = vfs.GetDir("_mods"))
+    if(ttvfs::VFSDir *vd = vfs.GetDir(mod.getBaseModPath().c_str(), true))
     {
+        debugLog("Re-Loading VFS mod dir...");
         vd->load();
         vfs.Reload();
+        debugLog("...done");
     }
 	
     // first load the packages, then enumerate XMLs
@@ -2252,7 +2255,7 @@ void DSQ::applyPatches()
 // thus directly using "gfx" subdir shoud be fine...
 void DSQ::refreshResourcesForPatch(const std::string& name)
 {
-    ttvfs::VFSDir *vd = dsq->vfs.GetDir(("_mods/" + name + "/gfx").c_str()); // only textures are resources, anyways
+    ttvfs::VFSDir *vd = dsq->vfs.GetDir((mod.getBaseModPath() + name + "/gfx").c_str()); // only textures are resources, anyways
     if(!vd)
         return;
 
@@ -2297,7 +2300,7 @@ void DSQ::applyPatch(const std::string& name)
     return;
 #endif
 
-    std::string src = "_mods/";
+    std::string src = mod.getBaseModPath();
     src += name;
     debugLog("Apply patch: " + src);
     vfs.Mount(src.c_str(), "", true);
@@ -2308,7 +2311,7 @@ void DSQ::applyPatch(const std::string& name)
 
 void DSQ::unapplyPatch(const std::string& name)
 {
-    std::string src = "_mods/";
+    std::string src = mod.getBaseModPath();
     src += name;
     debugLog("Unapply patch: " + src);
     vfs.Unmount(src.c_str(), "");
@@ -2903,7 +2906,7 @@ bool DSQ::mountModPackage(const std::string& pkg)
         return false;
     }
 
-    vfs.AddContainer(f, "_mods", true, false, true);
+    vfs.AddContainer(f, mod.getBaseModPath().c_str(), true, false, true);
     debugLog("Package: Mounted " + pkg + " as data container in _mods");
     return true;
 }

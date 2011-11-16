@@ -584,6 +584,10 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
         return;
     }
 
+    std::ostringstream os;
+    os << "... dir has " << vd->_files.size() << " files";
+    debugLog(os.str());
+
     for(ttvfs::ConstFileIter it = vd->_files.begin(); it != vd->_files.end(); ++it)
     {
         const ttvfs::VFSFile *f = it->second;
