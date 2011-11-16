@@ -148,7 +148,7 @@ static void wget_notify(bool complete, int gotbytes, int totalbytes, void *user1
             while(servx)
             {
                 if(const char *url = servx->Attribute("url"))
-                    _FetchModList(url, (int)user1); // this was abused as int, so this conversion is legal in this case
+                    _FetchModList(url, int((size_t)user1)); // this was abused as int, so this conversion is legal in this case
 
                 servx = servx->NextSiblingElement("Server");
             }
