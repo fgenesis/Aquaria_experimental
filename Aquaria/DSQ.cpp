@@ -2233,7 +2233,9 @@ void DSQ::loadMods()
 	selectedMod = 0;
 #endif
 
+#ifdef _DEBUG
     dsq->dumpVFS("loadmods");
+#endif
 }
 
 void DSQ::applyPatches()

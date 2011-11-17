@@ -168,7 +168,6 @@ bool VFSHelper::AddVFSDir(VFSDir *dir, const char *subdir /* = NULL */, bool ove
     VFSDir *sd = GetDir(subdir, true);
     if(!sd) // may be NULL if Prepare() was not called before
         return false;
-    dir->ref++; // because this is to be added to vlist
     VDirEntry ve(dir, subdir, overwrite);
     _StoreMountPoint(ve);
     sd->merge(dir, overwrite); // merge into specified subdir. will be (virtually) created if not existing
@@ -191,6 +190,9 @@ bool VFSHelper::Unmount(const char *src, const char *dest)
 
 void VFSHelper::_StoreMountPoint(const VDirEntry& ve)
 {
+    // increase ref already before it will be added
+    ve.vdir->ref++;
+
     // scan through and ensure only one mount point with the same data is present.
     // if present, remove and re-add, this ensures the mount point is at the end of the list
     for(VFSMountList::iterator it = vlist.begin(); it != vlist.end(); )
@@ -199,6 +201,7 @@ void VFSHelper::_StoreMountPoint(const VDirEntry& ve)
         if(ve.mountPoint == oe.mountPoint && ve.vdir == oe.vdir
             && (ve.overwrite || !oe.overwrite) ) // overwrite definitely, or if other does not overwrite
         {
+            it->vdir->ref--;
             vlist.erase(it++); // do not break; just in case there are more (fixme?)
         }
         else
@@ -215,6 +218,7 @@ bool VFSHelper::_RemoveMountPoint(const VDirEntry& ve)
         const VDirEntry& oe = *it;
         if(ve.mountPoint == oe.mountPoint && ve.vdir == oe.vdir)
         {
+            it->vdir->ref--;
             vlist.erase(it);
             return true;
         }
