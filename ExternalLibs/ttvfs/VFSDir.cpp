@@ -142,11 +142,49 @@ VFSFile *VFSDir::getFile(const char *fn)
     // if there is a '/' in the string, descend into subdir and continue there
     if(slashpos)
     {
-        const char *sub = slashpos + 1;
+        /*const char *sub = slashpos + 1;
         std::string t(fn, slashpos - fn);
         VFS_GUARD_OPT(this);
         VFSDir *subdir = getDir(t.c_str()); // fn is null-terminated early here
-        return subdir ? subdir->getFile(sub) : NULL;
+        return subdir ? subdir->getFile(sub) : NULL;*/
+
+        // "" (the empty directory name) is allowed, so the above way leads to t = "" in that case,
+        // which makes it return the wrong directory (-> itself).
+        // This whole mess is required for absolute unix-style paths ("/home/foo/..."),
+        // which, to integrate into the tree properly, sit in the root directory's ""-subdir.
+        // Note: Bad paths (double-slashes and the like) need to be normalized elsewhere, currently! [FIXME]
+
+        size_t len = strlen(fn);
+        char *dup = (char*)malloc(len + 1); // TODO: use stack alloc instead
+        memcpy(dup, fn, len + 1);
+        slashpos = dup + (slashpos - fn); // use direct offset, not to have to recount again the first time
+        VFSDir *subdir = this;
+        const char *ptr = dup;
+        Dirs::iterator it;
+        goto pos_known;
+
+        do
+        {
+            ptr = slashpos + 1;
+            slashpos = (char *)strchr(ptr, '/');
+            if(!slashpos)
+                break;
+
+        pos_known:
+            *slashpos = 0;
+            it = subdir->_subdirs.find(ptr);
+            if(it != subdir->_subdirs.end())
+                subdir = it->second;
+        }
+        while(subdir);
+        free(dup);
+        if(!subdir)
+            return NULL;
+        // restore pointer into original string, by offset
+        ptr = fn + (ptr - dup);
+
+        Files::iterator ft = subdir->_files.find(ptr);
+        return ft != subdir->_files.end() ? ft->second : NULL;
     }
 
     // no subdir? file must be in this dir now.

@@ -1412,6 +1412,7 @@ private:
 public:
     ttvfs::VFSHelperLVPA vfs;
     void setupVFS(const char *extradir = NULL);
+    void dumpVFS(const std::string& a);
     void addVFSFileForDrop(ttvfs::VFSFile *vf);
 };
 

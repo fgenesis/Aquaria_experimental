@@ -584,11 +584,9 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
         return;
     }
 
-    std::ostringstream os;
-    os << "... dir has " << vd->_files.size() << " files";
-    debugLog(os.str());
+    ttvfs::VFSDir::Files fileset = vd->_files; // make a copy, this is intentional in case the callback modifies the tree
 
-    for(ttvfs::ConstFileIter it = vd->_files.begin(); it != vd->_files.end(); ++it)
+    for(ttvfs::ConstFileIter it = fileset.begin(); it != fileset.end(); ++it)
     {
         const ttvfs::VFSFile *f = it->second;
         const char *e = strrchr(f->name(), '.');

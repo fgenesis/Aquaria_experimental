@@ -2232,11 +2232,20 @@ void DSQ::loadMods()
 	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);
 	selectedMod = 0;
 #endif
+
+    dsq->dumpVFS("loadmods");
 }
 
 void DSQ::applyPatches()
 {
 #ifndef AQUARIA_DEMO
+    
+//#ifdef BBGE_BUILD_MACOSX
+    // HACK: This should be in Core::setupVFS() !! (but dsq is unknown there)
+    // This is to correctly place the override files from _hackfixes.lvpa, which are in this dir always 
+    vfs.Mount("_mods", mod.getBaseModPath().c_str(), true);
+//#endif
+    
     // user wants mods, but not yet loaded
     if(activePatches.size() && modEntries.empty())
         loadMods();

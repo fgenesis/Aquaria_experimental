@@ -859,9 +859,9 @@ void Core::debugLog(const std::string &s)
 	{
 		_logOut << s << std::endl;	
 	}
-//#ifdef _DEBUG
+#ifdef _DEBUG
     std::cout << s << std::endl;
-//#endif
+#endif
 }
 
 const float SORT_DELAY = 10;
@@ -901,7 +901,7 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 #else
 
     debugLogPath = "";
-    userDataFolder = "."; // FG: DOES THIS EVEN WORK??
+    userDataFolder = ".";
 
     #ifdef BBGE_BUILD_WINDOWS
     {
@@ -4958,12 +4958,17 @@ int Core::tgaSaveSeries(char		*filename,
 
 #include "LVPAFile.h" // HACK: for _hackfixes.lvpa
 
-static void _DumpVFS(const std::string a)
+void Core::dumpVFS(const std::string& a)
 {
-    std::string fn = "vfsdump-" + a + ".txt";
+    std::string fn = debugLogPath + "vfsdump-" + a + ".txt";
     std::ofstream out(fn.c_str());
-    core->vfs.debugDumpTree(out);
-    out.close();
+    if(out.is_open())
+    {
+        core->vfs.debugDumpTree(out);
+        out.close();
+    }
+    else
+        debugLog("ERROR: dumpVFS: Could not open file " + fn + " for writing");
 }
 
 void Core::setupVFS(const char *extradir /* = NULL */)
@@ -4973,7 +4978,7 @@ void Core::setupVFS(const char *extradir /* = NULL */)
     vfs.Prepare();
 
 #ifdef _DEBUG
-    _DumpVFS("begin");
+    dumpVFS("begin");
 #endif
 
 #ifdef BBGE_BUILD_MACOSX
@@ -5004,6 +5009,12 @@ void Core::setupVFS(const char *extradir /* = NULL */)
     //vfs.Mount("_patch", "_mods", true); // TEMP: until i organize my file system.
 #endif
 
+    // FIXME: The following code was moved to DSQ::applyPatches()
+/*#ifdef BBGE_BUILD_MACOSX
+    // HACK: OMG. i hope dsq and dsq->mod are already initialized here o_O !!
+    vfs.Mount("_mods", dsq->mod.getBaseModPath().c_str(), true);
+#endif*/
+
     if(extradir)
     {
         std::string msg("VFS extra dir: ");
@@ -5019,6 +5030,6 @@ void Core::setupVFS(const char *extradir /* = NULL */)
 
     // DEBUG
 #ifdef _DEBUG
-    _DumpVFS("done");
+    dumpVFS("done");
 #endif
 }
