@@ -568,6 +568,9 @@ std::string stripEndlineForUnix(const std::string &in)
 	return out;
 }
 
+static void incref_all(const std::pair<std::string, ttvfs::VFSFile*>& p) { ++(p.second->ref); }
+static void decref_all(const std::pair<std::string, ttvfs::VFSFile*>& p) { --(p.second->ref); }
+
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param)
 {
 	if (path.empty()) return;
@@ -585,6 +588,7 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
     }
 
     ttvfs::VFSDir::Files fileset = vd->_files; // make a copy, this is intentional in case the callback modifies the tree
+    std::for_each(fileset.begin(), fileset.end(), incref_all); // and because we are storing these now, do correct ref counting
 
     for(ttvfs::ConstFileIter it = fileset.begin(); it != fileset.end(); ++it)
     {
@@ -600,6 +604,7 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 
         callback(path + f->name(), param);
     }
+    std::for_each(fileset.begin(), fileset.end(), decref_all);
 
     return;
     // --- BELOW HERE NOT TOUCHED ANYMORE ---

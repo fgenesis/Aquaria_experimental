@@ -149,7 +149,10 @@ void VFSHelper::Reload(bool fromDisk /* = false */)
         LoadFileSysRoot();
     Prepare(false);
     for(VFSMountList::iterator it = vlist.begin(); it != vlist.end(); it++)
+    {
+        //printf("VFS: mount {%s} [%s] -> [%s] (overwrite: %d)\n", it->vdir->getType(), it->vdir->fullname(), it->mountPoint.c_str(), it->overwrite);
         GetDir(it->mountPoint.c_str(), true)->merge(it->vdir, it->overwrite);
+    }
 }
 
 bool VFSHelper::Mount(const char *src, const char *dest, bool overwrite /* = true*/)
@@ -198,7 +201,8 @@ void VFSHelper::_StoreMountPoint(const VDirEntry& ve)
     for(VFSMountList::iterator it = vlist.begin(); it != vlist.end(); )
     {
         const VDirEntry& oe = *it;
-        if(ve.mountPoint == oe.mountPoint && ve.vdir == oe.vdir
+        if (ve.mountPoint == oe.mountPoint
+            && (ve.vdir == oe.vdir || !casecmp(ve.vdir->fullname(), oe.vdir->fullname()))
             && (ve.overwrite || !oe.overwrite) ) // overwrite definitely, or if other does not overwrite
         {
             it->vdir->ref--;
@@ -216,7 +220,8 @@ bool VFSHelper::_RemoveMountPoint(const VDirEntry& ve)
     for(VFSMountList::iterator it = vlist.begin(); it != vlist.end(); ++it)
     {
         const VDirEntry& oe = *it;
-        if(ve.mountPoint == oe.mountPoint && ve.vdir == oe.vdir)
+        if(ve.mountPoint == oe.mountPoint
+            && (ve.vdir == oe.vdir || !casecmp(ve.vdir->fullname(), oe.vdir->fullname())) )
         {
             it->vdir->ref--;
             vlist.erase(it);
@@ -226,12 +231,12 @@ bool VFSHelper::_RemoveMountPoint(const VDirEntry& ve)
     return false;
 }
 
-bool VFSHelper::MountExternalPath(const char *path, const char *where /* = "" */)
+bool VFSHelper::MountExternalPath(const char *path, const char *where /* = "" */, bool overwrite /* = true */)
 {
     // no guard required here, AddVFSDir has one, and the reference count is locked as well.
     VFSDirReal *vfs = new VFSDirReal;
     if(vfs->load(path))
-        AddVFSDir(vfs, where);
+        AddVFSDir(vfs, where, overwrite);
     return !!--(vfs->ref); // 0 if deleted
 }
 
@@ -288,7 +293,7 @@ VFSFile *VFSHelper::GetFile(const char *fn)
                 break;
     }
 
-    //printf("VFS: GetFile '%s' -> '%s' (%p)\n", fn, vf ? vf->fullname() : "NULL", vf);
+    //printf("VFS: GetFile '%s' -> '%s' (%s:%p)\n", fn, vf ? vf->fullname() : "NULL", vf ? vf->getType() : "?", vf);
 
     return vf;
 }
@@ -348,7 +353,7 @@ VFSDir *VFSHelper::GetDir(const char* dn, bool create /* = false */)
         }
     }
 
-    //printf("VFS: GetDir '%s' -> '%s' (%p)\n", dn, vd ? vd->fullname() : "NULL", vd);
+    //printf("VFS: GetDir '%s' -> '%s' (%s:%p)\n", dn, vd ? vd->fullname() : "NULL", vd ? vd->getType() : "?", vd);
 
     return vd;
 }

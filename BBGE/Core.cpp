@@ -923,7 +923,8 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
             if(SHGetSpecialFolderPathA(NULL, &pathbuf[0], CSIDL_APPDATA, 0))
             {
                 userDataFolder = pathbuf;
-                userDataFolder += "/.Aquaria";
+                userDataFolder += '/';
+                userDataFolder += userDataSubFolder;
                 for(uint32 i = 0; i < userDataFolder.length(); ++i)
                     if(userDataFolder[i] == '\\')
                         userDataFolder[i] = '/';
@@ -944,7 +945,15 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 
 	debugLogTextures = true;
 
-    _logOut.open((debugLogPath + "debug.log").c_str());
+    if(_logOut.is_open())
+        _logOut.close();
+    _logOut.clear();
+    _logOut.open((debugLogPath + "debug.log").c_str(), std::ios_base::out);
+
+    debugLog("Log opened.");
+
+    if(!_logOut.good())
+        errorLog("Failed to open debug log at " + debugLogPath + "debug.log");
 	
 	grabInputOnReentry = -1;
 
@@ -4984,7 +4993,22 @@ void Core::setupVFS(const char *extradir /* = NULL */)
 #ifdef BBGE_BUILD_MACOSX
     // we assume the working dir is something like "/Applications/Aquaria-fg.app",
     // and that the commercial game resides at "/Applications/Aquaria.app".
-    vfs.MountExternalPath("../Aquaria.app");
+
+    // we do NOT mount the whole folder, as it may contain some garbage we do not want.
+    // (saves messing up, user settings, etc)
+    // This is less a problem if mounting in non-overwriting mode, but in that case, there is
+    // a problem with hot-patching: changes to textures require a game restart to be reverted.
+    //vfs.MountExternalPath("../Aquaria.app", "", false);
+
+    // Instead, mount only the paths that are needed (but forcing overwrite),
+    // this prevents the problems described above.
+    vfs.MountExternalPath("../Aquaria.app/_mods", "_mods", true);
+    vfs.MountExternalPath("../Aquaria.app/data", "data", true);
+    vfs.MountExternalPath("../Aquaria.app/gfx", "gfx", true);
+    vfs.MountExternalPath("../Aquaria.app/mus", "mus", true);
+    //vfs.MountExternalPath("../Aquaria.app/scripts", "", true); // this is provided by _hackfixes.lvpa (old scripts are incompatible anyways)
+    vfs.MountExternalPath("../Aquaria.app/sfx", "sfx", true);
+    vfs.MountExternalPath("../Aquaria.ap/vox", "vox", true);
 #endif
 
 
