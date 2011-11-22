@@ -3429,19 +3429,15 @@ void Core::pollEvents()
 		switch (event.type) {
 			case SDL_KEYDOWN:
 			{
-				#if __APPLE__
+				#ifdef BBGE_BUILD_MACOSX
 				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_META))
-				{
-					SDL_Quit();
-					_exit(0);
-				}
 				#else
-                if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
-                {
-                    quitNestedMain();
-                    quit();
-                }
-                #endif
+				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
+				#endif
+				{
+					quitNestedMain();
+					quit();
+				}
 
 				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
 				{
@@ -5008,7 +5004,7 @@ void Core::setupVFS(const char *extradir /* = NULL */)
     vfs.MountExternalPath("../Aquaria.app/mus", "mus", true);
     //vfs.MountExternalPath("../Aquaria.app/scripts", "", true); // this is provided by _hackfixes.lvpa (old scripts are incompatible anyways)
     vfs.MountExternalPath("../Aquaria.app/sfx", "sfx", true);
-    vfs.MountExternalPath("../Aquaria.ap/vox", "vox", true);
+    vfs.MountExternalPath("../Aquaria.app/vox", "vox", true);
 #endif
 
 

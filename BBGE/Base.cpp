@@ -857,10 +857,10 @@ GLuint generateEmptyTexture(int quality)											// Create An Empty Texture
 	unsigned int* data;											// Stored Data
 
 	// Create Storage Space For Texture Data (128x128x4)
-	int size = (quality * quality)* 4 * sizeof(unsigned int);
+	int size = (quality * quality)* 4;
 	data = (unsigned int*)new GLuint[size];
 
-	memset(data, 0, size);	// Clear Storage Memory
+	memset(data, 0, size * sizeof(GLuint));	// Clear Storage Memory
 
 
 #ifdef BBGE_BUILD_OPENGL
@@ -872,18 +872,14 @@ GLuint generateEmptyTexture(int quality)											// Create An Empty Texture
 		GL_RGBA, GL_UNSIGNED_BYTE, data);						// Build Texture Using Information In data
 #endif
 
-    delete [] data;												// Release data
+	delete [] data;												// Release data
 
 	return txtnumber;											// Return The Texture ID
 }
 
 Vector randVector(float mag)
 {
-	// FIXME: Is this really what you wanted?  I'd suggest:
-	//     float angle = (rand() / (float)RAND_MAX) * PI;
-        // --achurch
-	//float angle = (rand()&314);
-    float angle = (rand() / (float)RAND_MAX) * PI; // FG: done that.
+    float angle = (rand() / (float)RAND_MAX) * 2.0f * PI;
 	float x = sinf(angle), y = cosf(angle);
 	return Vector(x*mag, y*mag);
 }

@@ -3943,7 +3943,9 @@ void SceneEditor::dumpObs()
         if(tv.y == 0)
             break;
     }
-    core->tgaSave(("griddump-" + game->sceneName + ".tga").c_str(), MAX_GRID, MAX_GRID, 32, data);
+    std::string outfn = dsq->getUserDataFolder() + "/griddump-" + game->sceneName + ".tga";
+    core->tgaSave(outfn.c_str(), MAX_GRID, MAX_GRID, 32, data);
+    dsq->screenMessage("Saved grid image to " + outfn);
 }
 
 
