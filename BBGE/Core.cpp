@@ -4962,6 +4962,7 @@ int Core::tgaSaveSeries(char		*filename,
  }
 
 #include "LVPAFile.h" // HACK: for _hackfixes.lvpa
+#include "VFSTools.h"
 
 void Core::dumpVFS(const std::string& a)
 {
@@ -4982,49 +4983,79 @@ void Core::setupVFS(const char *extradir /* = NULL */)
     vfs.LoadFileSysRoot();
     vfs.Prepare();
 
-#ifdef _DEBUG
+//#ifdef _DEBUG
     dumpVFS("begin");
-#endif
+//#endif
+	bool isComplete = vfs.GetFile("gfx/modselect/globe.png");
 
-#ifdef BBGE_BUILD_MACOSX
-    // we assume the working dir is something like "/Applications/Aquaria-fg.app",
-    // and that the commercial game resides at "/Applications/Aquaria.app".
+//#ifdef BBGE_BUILD_MACOSX
+	if(vfs.GetFile("data/variables.txt"))
+	{
+		debugLog("setupVFS: data/variables.txt exists, not mounting base install");
+	}
+	else
+	{
+		debugLog("setupVFS: data/variables.txt does not exist, trying mounting...");
+		// we assume the working dir is something like "/Applications/Aquaria-fg.app",
+		// and that the commercial game resides at "/Applications/Aquaria.app".
+		if(ttvfs::IsDirectory("../Aquaria.app"))
+		{
+			debugLog("../Aquaria.app dir exists!");
+			// we do NOT mount the whole folder, as it may contain some garbage we do not want.
+			// (saves messing up, user settings, etc)
+			// This is less a problem if mounting in non-overwriting mode, but in that case, there is
+			// a problem with hot-patching: changes to textures require a game restart to be reverted.
+			//vfs.MountExternalPath("../Aquaria.app", "", false);
 
-    // we do NOT mount the whole folder, as it may contain some garbage we do not want.
-    // (saves messing up, user settings, etc)
-    // This is less a problem if mounting in non-overwriting mode, but in that case, there is
-    // a problem with hot-patching: changes to textures require a game restart to be reverted.
-    //vfs.MountExternalPath("../Aquaria.app", "", false);
+			// Instead, mount only the paths that are needed (but forcing overwrite),
+			// this prevents the problems described above.
+			vfs.MountExternalPath("../Aquaria.app/_mods", "_mods", true);
+			vfs.MountExternalPath("../Aquaria.app/data", "data", true);
+			vfs.MountExternalPath("../Aquaria.app/gfx", "gfx", true);
+			vfs.MountExternalPath("../Aquaria.app/mus", "mus", true);
+			//vfs.MountExternalPath("../Aquaria.app/scripts", "", true); // this is provided by _hackfixes.lvpa (old scripts are incompatible anyways)
+			vfs.MountExternalPath("../Aquaria.app/sfx", "sfx", true);
+			vfs.MountExternalPath("../Aquaria.app/vox", "vox", true);
 
-    // Instead, mount only the paths that are needed (but forcing overwrite),
-    // this prevents the problems described above.
-    vfs.MountExternalPath("../Aquaria.app/_mods", "_mods", true);
-    vfs.MountExternalPath("../Aquaria.app/data", "data", true);
-    vfs.MountExternalPath("../Aquaria.app/gfx", "gfx", true);
-    vfs.MountExternalPath("../Aquaria.app/mus", "mus", true);
-    //vfs.MountExternalPath("../Aquaria.app/scripts", "", true); // this is provided by _hackfixes.lvpa (old scripts are incompatible anyways)
-    vfs.MountExternalPath("../Aquaria.app/sfx", "sfx", true);
-    vfs.MountExternalPath("../Aquaria.app/vox", "vox", true);
-#endif
+			if(!vfs.GetFile("data/variables.txt"))
+			{
+				errorLog("WTF?! Failed to mount base install. Someone should fix this! Exiting now.");
+			}
+		}
+		else
+		{
+			errorLog("Installation not complete, and failed to re-use the commercial Aquaria.app, will now exit.");
+			exit(1);
+		}
+	}
+//#endif
 
 
 #ifndef AQUARIA_DEMO
     // FIXME: TEMP: - for test & debug versions.
 
-    bool gotfix = false;
-    if(exists("_hackfixes.lvpa"))
-    {
-        lvpa::LVPAFile *patch = new lvpa::LVPAFile;
-        if(patch->LoadFrom("_hackfixes.lvpa"))
-        {
-            vfs.AddContainer(patch, "", true, false, true);
-            gotfix = true;
-        }
-        else
-            delete patch;
-    }
-    if(!gotfix)
-        errorLog("WARNING: _hackfixes.lvpa not found or corrupt, this will likely screw up this experimental version!");
+	if(isComplete)
+	{
+		debugLog("setupVFS: Got additional data! Not loading more.");
+	}
+	else
+	{
+		debugLog("setupVFS: Missing additional data, loading _hackfixes.lvpa");
+		bool gotfix = false;
+		if(exists("_hackfixes.lvpa"))
+		{
+			lvpa::LVPAFile *patch = new lvpa::LVPAFile;
+			if(patch->LoadFrom("_hackfixes.lvpa"))
+			{
+				vfs.AddContainer(patch, "", true, false, true);
+				gotfix = true;
+			}
+			else
+				delete patch;
+		}
+		if(!gotfix)
+			debugLog("WARNING: _hackfixes.lvpa not found or corrupt, this will likely screw up this experimental version!");
+	}
 
     //vfs.Mount("_patch", "_mods", true); // TEMP: until i organize my file system.
 #endif
@@ -5049,7 +5080,7 @@ void Core::setupVFS(const char *extradir /* = NULL */)
     debugLog("VFS init done!");
 
     // DEBUG
-#ifdef _DEBUG
+//#ifdef _DEBUG
     dumpVFS("done");
-#endif
+//#endif
 }
