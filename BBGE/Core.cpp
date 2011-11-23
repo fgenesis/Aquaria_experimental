@@ -1165,13 +1165,29 @@ static int locateOneElement(char *buf)
 }
 #endif
 
+// eliminate multiple consecutive slashes
+static void fixSlashStrcpy(char *dst, const char *src)
+{
+	bool was = false;
+	while(*src)
+	{
+		if(was && *src == '/')
+		{
+			++src;
+			continue;
+		}
+		was = *src == '/';
+		*dst++ = *src++;
+	}
+	*dst = 0;
+}
 
 std::string Core::adjustFilenameCase(const char *_buf)
 {
 #ifdef BBGE_BUILD_UNIX  // any case is fine if not Linux.
 	int rc = 1;
 	char *buf = (char *) alloca(strlen(_buf) + 1);
-	strcpy(buf, _buf);
+	fixSlashStrcpy(buf, _buf);
 
 	char *ptr = buf;
 	while ((ptr = strchr(ptr + 1, '/')) != 0)
@@ -4988,7 +5004,7 @@ void Core::setupVFS(const char *extradir /* = NULL */)
 //#endif
 	bool isComplete = vfs.GetFile("gfx/modselect/globe.png");
 
-//#ifdef BBGE_BUILD_MACOSX
+#ifdef BBGE_BUILD_MACOSX
 	if(vfs.GetFile("data/variables.txt"))
 	{
 		debugLog("setupVFS: data/variables.txt exists, not mounting base install");
@@ -5028,7 +5044,7 @@ void Core::setupVFS(const char *extradir /* = NULL */)
 			exit(1);
 		}
 	}
-//#endif
+#endif
 
 
 #ifndef AQUARIA_DEMO
