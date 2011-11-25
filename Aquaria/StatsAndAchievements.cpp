@@ -174,60 +174,57 @@ void StatsAndAchievements::RunFrame()
 
 		const size_t max_achievements = ARRAYSIZE(g_rgAchievements);
 
-        // VFS related
-        std::vector<std::string> splitv;
-        char *achtxt = "";
-        ttvfs::VFSFile *vf = core->vfs.GetFile("data/achievements.txt");
-        if(vf)
-        {
-            vf->open(NULL, "r");
-            achtxt = (char*)vf->getBuf();
-            vf->close();
-            lvpa::StrSplit(achtxt, "\n", splitv, true);
-            core->addVFSFileForDrop(vf);
-        }
+		// VFS related
+		std::vector<std::string> splitv;
+		char *achtxt = "";
+		ttvfs::VFSFile *vf = core->vfs.GetFile("data/achievements.txt");
+		if(vf)
+		{
+			vf->open(NULL, "r");
+			achtxt = (char*)vf->getBuf(); //does internal newline mangling
+			vf->close();
+			lvpa::StrSplit(achtxt, "\n", splitv, true);
+			core->addVFSFileForDrop(vf);
+		}
 
 		FILE *io = NULL;
 
 		// Get generic achievement data...
 		//io = fopen("data/achievements.txt", "r");
 		char linebuf[1024];
-        char *line = &linebuf[0];
-        int ctr = 0;
+		char *line = &linebuf[0];
+		int ctr = 0;
 		for (size_t i = 0; i < max_achievements; i++)
 		{
-            line = "";
+			line = "";
 			//if (!io || (fgets(line, sizeof (line), io) == NULL))
-            if(ctr < splitv.size())
-                line = (char*)splitv[ctr++].c_str();
-            if(!*line)
-            {
+			if(ctr < splitv.size())
+				line = (char*)splitv[ctr++].c_str();
+			if(!*line)
+			{
 				snprintf(linebuf, sizeof (line), "Achievement #%d", (int) i);
-                line = &linebuf[0];
-            }
+				line = &linebuf[0];
+			}
 			else
 			{
 				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
 					*ptr = '\0';
 			}
-			line[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
 			strcpy(g_rgAchievements[i].name, line);
 
-            
 			//if (!io || (fgets(line, sizeof (line), io) == NULL))
-            if(ctr < splitv.size())
-                line = (char*)splitv[ctr++].c_str();
-            if(!*line)
-            {
+			if(ctr < splitv.size())
+				line = (char*)splitv[ctr++].c_str();
+			if(!*line)
+			{
 				snprintf(linebuf, sizeof (line), "[Description of Achievement #%d is missing!]", (int) i);
-                line = &linebuf[0];
-            }
+				line = &linebuf[0];
+			}
 			else
 			{
 				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
 					*ptr = '\0';
 			}
-			line[sizeof (g_rgAchievements[i].desc) - 1] = '\0';  // just in case.
 			strcpy(g_rgAchievements[i].desc, line);
 
 			// unsupported at the moment.
@@ -236,7 +233,7 @@ void StatsAndAchievements::RunFrame()
 
 		if (io != NULL)
 			fclose(io);
-        
+	
 
 		// See what this specific player has achieved...
 
