@@ -1472,7 +1472,7 @@ luaFunc(createShot)
 	luaReturnPtr(s);
 }
 
-
+// deprecated, use entity_playSfx
 luaFunc(entity_sound)
 {
 	Entity *e = entity(L);
@@ -1483,15 +1483,27 @@ luaFunc(entity_sound)
 	luaReturnNum(0);
 }
 
-
-luaFunc(entity_soundFreq)
+luaFunc(entity_playSfx)
 {
 	Entity *e = entity(L);
+	void *h = NULL;
 	if (e)
 	{
-		e->soundFreq(lua_tostring(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
+		PlaySfx sfx = dsq->calcPositionalSfx(e->position, lua_tonumber(L, 7));
+		sfx.name = lua_tostring(L, 2);
+		sfx.freq = lua_tonumber(L, 3);
+		float vol = lua_tonumber(L, 4);
+		sfx.loops = lua_tonumber(L, 5);
+		float fadeOut = lua_tonumber(L, 6);
+		if(vol > 0)
+			sfx.vol *= vol;
+		h = core->sound->playSfx(sfx);
+		if (fadeOut != 0)
+		{
+			sound->fadeSfx(h, SFT_OUT, fadeOut);
+		}
 	}
-	luaReturnNum(0);
+	luaReturnPtr(h);
 }
 
 luaFunc(entity_setSpiritFreeze)
@@ -4556,48 +4568,6 @@ luaFunc(entity_getBoneByName)
 	luaReturnPtr(b);
 }
 
-// ditch entity::sound and use this code instead...
-// replace entity sound with this code
-
-luaFunc(entity_playSfx)
-{
-	Entity *e= entity(L);
-	if (e)
-	{
-		std::string sfx = lua_tostring(L, 2);
-
-
-		/*
-		int f = rand()%200-100;
-		f += 1000;
-		*/
-		dsq->playPositionalSfx(sfx, e->position);
-		/*
-		Vector diff = e->position - dsq->game->avatar->position;
-		if (diff.isLength2DIn(800))
-		{
-			int dist = diff.getLength2D();
-			int vol = 255 - int((dist*255.0f) / 1500.0f);
-			int pan = (diff.x*100)/800.0f;
-			if (pan < -100)
-				pan = -100;
-			if (pan > 100)
-				pan = 100;
-
-			std::ostringstream os;
-			os << "vol: " << vol << " pan: " << pan;
-			debugLog(os.str());
-
-
-			sound->playSfx(sfx, vol, pan, 1000+f);
-		}
-		*/
-
-		//sound->playSfx(sfx);
-	}
-	luaReturnNum(0);
-}
-
 luaFunc(bone_getPosition)
 {
 	Bone *b = bone(L);
@@ -5061,23 +5031,36 @@ luaFunc(emote)
 
 luaFunc(playSfx)
 {
-	int freq = lua_tonumber(L, 2);
+	float freq = lua_tonumber(L, 2);
 	float vol = lua_tonumber(L, 3);
 	int loops = lua_tointeger(L, 4);
-	if (vol == 0)
+	if (vol <= 0)
 		vol = 1;
 
 	PlaySfx sfx;
+
+	if (lua_isnumber(L, 5) && lua_isnumber(L, 6))
+	{
+		const Vector pos(lua_tonumber(L, 5), lua_tonumber(L, 6));
+		sfx = dsq->calcPositionalSfx(pos, lua_tonumber(L, 7));
+		sfx.vol *= vol;
+	}
+	else
+	{
+		sfx.vol = vol;
+	}
+
 	sfx.name = getString(L, 1);
-	sfx.vol = vol;
 	sfx.freq = freq;
 	sfx.loops = loops;
 
 	void *handle = NULL;
-	
+
 	if (!dsq->isSkippingCutscene())
+	{
 		handle = core->sound->playSfx(sfx);
-	
+	}
+
 	luaReturnPtr(handle);
 }
 
@@ -7532,7 +7515,6 @@ static const struct {
 	luaRegister(entity_setActivationType),
 	luaRegister(entity_setColor),
 	{"entity_color", l_entity_setColor},
-	luaRegister(entity_playSfx),
 
 	luaRegister(isQuitFlag),
 	luaRegister(isDeveloperKeys),
@@ -7738,7 +7720,7 @@ static const struct {
 	luaRegister(entity_isFollowingPath),
 	luaRegister(entity_followEntity),
 	luaRegister(entity_sound),
-	luaRegister(entity_soundFreq),
+	luaRegister(entity_playSfx),
 
 
 	luaRegister(entity_enableMotionBlur),
@@ -8257,8 +8239,9 @@ static const struct {
 
     // -- deprecated/compatibility related functions below here --
 
-    {"entity_incrTargetLeaches", l_avatar_incrLeaches},
-    {"entity_decrTargetLeaches", l_avatar_decrLeaches},
+	{"entity_incrTargetLeaches", l_avatar_incrLeaches},
+	{"entity_decrTargetLeaches", l_avatar_decrLeaches},
+	{"entity_soundFreq", l_entity_sound},
 };
 
 //============================================================================================
