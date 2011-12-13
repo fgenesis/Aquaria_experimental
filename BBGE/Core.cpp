@@ -5048,30 +5048,22 @@ void Core::setupVFS(const char *extradir /* = NULL */)
 
 
 #ifndef AQUARIA_DEMO
-    // FIXME: TEMP: - for test & debug versions.
 
-	if(isComplete)
+	debugLog("setupVFS: Loading additional data from _hackfixes.lvpa");
+	bool gotfix = false;
+	if(exists("_hackfixes.lvpa"))
 	{
-		debugLog("setupVFS: Got additional data! Not loading more.");
-	}
-	else
-	{
-		debugLog("setupVFS: Missing additional data, loading _hackfixes.lvpa");
-		bool gotfix = false;
-		if(exists("_hackfixes.lvpa"))
+		lvpa::LVPAFile *patch = new lvpa::LVPAFile;
+		if(patch->LoadFrom("_hackfixes.lvpa"))
 		{
-			lvpa::LVPAFile *patch = new lvpa::LVPAFile;
-			if(patch->LoadFrom("_hackfixes.lvpa"))
-			{
-				vfs.AddContainer(patch, "", true, false, true);
-				gotfix = true;
-			}
-			else
-				delete patch;
+			vfs.AddContainer(patch, "", true, false, true);
+			gotfix = true;
 		}
-		if(!gotfix)
-			debugLog("WARNING: _hackfixes.lvpa not found or corrupt, this will likely screw up this experimental version!");
+		else
+			delete patch;
 	}
+	if(!gotfix && !isComplete)
+		debugLog("WARNING: _hackfixes.lvpa not found or corrupt, this will likely screw up this experimental version!");
 
     //vfs.Mount("_patch", "_mods", true); // TEMP: until i organize my file system.
 #endif
