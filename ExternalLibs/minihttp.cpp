@@ -256,14 +256,14 @@ void HttpSocket::SetDelCallback(del_callback f, void *user /* = NULL */)
     _del_cb_data = user;
 }
 
-bool HttpSocket::SendGet(const std::string what, recv_callback cb /* = NULL */,
+bool HttpSocket::SendGet(const std::string& what, recv_callback cb /* = NULL */,
                          void *user /* = NULL */, deletor dtor /* = NULL */)
 {
     Request req(what, cb, user, dtor);
     return SendGet(req, false);
 }
 
-bool HttpSocket::QueueGet(const std::string what, recv_callback cb /* = NULL */,
+bool HttpSocket::QueueGet(const std::string& what, recv_callback cb /* = NULL */,
                           void *user /* = NULL */, deletor dtor /* = NULL */)
 {
     Request req(what, cb, user, dtor);

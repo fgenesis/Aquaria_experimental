@@ -71,8 +71,8 @@ public:
     void SetDelCallback(del_callback f, void *user = NULL);
 
     bool SendGet(Request& what, bool enqueue);
-    bool SendGet(const std::string what, recv_callback cb = NULL, void *user = NULL, deletor dtor = NULL);
-    bool QueueGet(const std::string what, recv_callback cb = NULL, void *user = NULL, deletor dtor = NULL);
+    bool SendGet(const std::string& what, recv_callback cb = NULL, void *user = NULL, deletor dtor = NULL);
+    bool QueueGet(const std::string& what, recv_callback cb = NULL, void *user = NULL, deletor dtor = NULL);
     bool SendBytes(const char *str, unsigned int len);
 
     const char *GetHost(void) { return _host.c_str(); }

@@ -262,8 +262,10 @@ inline static VFSFile *VFSHelper_GetFileByLoader(VFSLoader *ldr, const char *fn,
 
 VFSFile *VFSHelper::GetFile(const char *fn)
 {
-    while(fn[0] == '.' && fn[1] == '/')
-        fn += 2;
+    //while(fn[0] == '.' && fn[1] == '/')
+    //    fn += 2;
+    std::string fixed = FixPath(fn);
+    fn = fixed.c_str();
 
     VFSFile *vf = NULL;
 
@@ -319,8 +321,10 @@ inline static VFSDir *VFSHelper_GetDirByLoader(VFSLoader *ldr, const char *fn, V
 
 VFSDir *VFSHelper::GetDir(const char* dn, bool create /* = false */)
 {
-    while(dn[0] == '.' && dn[1] == '/')
-        dn += 2;
+    //while(dn[0] == '.' && dn[1] == '/')
+    //    dn += 2;
+    std::string fixed = FixPath(dn);
+    dn = fixed.c_str();
 
     VFSDir *vd;
     {

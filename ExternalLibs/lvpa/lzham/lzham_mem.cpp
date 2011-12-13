@@ -4,6 +4,8 @@
 
 #ifdef __APPLE__
    #include <malloc/malloc.h>
+#elif defined(__FreeBSD__) || defined(__NetBSD__)
+   #include <malloc_np.h>
 #else
    #include <malloc.h>
 #endif

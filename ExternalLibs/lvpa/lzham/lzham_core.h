@@ -6,7 +6,7 @@
    #pragma warning (disable: 4127) // conditional expression is constant
 #endif
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__)
    #define LZHAM_ANSI_CPLUSPLUS 1
 #endif
 

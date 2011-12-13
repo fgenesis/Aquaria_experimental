@@ -244,15 +244,16 @@ std::string FixPath(const std::string& s)
     if(s.empty())
         return s;
     const char *p = s.c_str();
-    while(p[0] == '.' && p[1] == '/')
+    while(p[0] == '.' && (p[1] == '/' || p[1] == '\\'))
         p += 2;
     char end = s[s.length() - 1];
-    if( !(end == '/' || end == '\\') ) // early check
-        return FixSlashes(p == s.c_str() ? s : p); // avoid hidden re-allocation when pointer was not moved
-
-    std::string r = FixSlashes(s);
-    r.erase(s.length() - 1); // strip trailing '/'
-    return r;
+    if(end == '/' || end == '\\')
+    {
+        std::string r(p);
+        r.erase(r.length() - 1); // strip trailing '/'
+        return FixSlashes(r);
+    }
+    return FixSlashes(p);
 }
 
 bool IsDirectory(const char *s)
