@@ -59,7 +59,7 @@ void GridRender::onRender()
 	break;
 	}
 
-	const signed char obsType = signed char(this->obsType);
+	const int obsType = int(this->obsType);
 	Vector camPos = core->cameraPos;
 	camPos.x -= core->getVirtualOffX() * (core->invGlobalScale);
 	const TileVector ct(camPos);
@@ -77,43 +77,40 @@ void GridRender::onRender()
 		startY = 0;
 	if (endY >= MAX_GRID)
 		endY = MAX_GRID-1;
-	for (int x = startX; x <= endX; ++x)
+	for (int x = startX; x <= endX; x++)
 	{
 		const signed char *gridColumn = dsq->game->getGridColumn(x);
-		int startCol = -1, endCol, y;
-
-		// fast-forward to next drawable byte
-		if(const signed char *next = (const signed char*)memchr(gridColumn + startY, obsType, endY - startY + 1)) // find next byte with correct obs type
+		int startCol = -1, endCol;
+		for (int y = startY; y <= endY; y++)
 		{
-			y = next - gridColumn; // will get incremented right away, which is okay, because we alrady set startCol
-			startCol = y;
-		}
-		else
-			continue;
+			int v = gridColumn[y];
+			// HACK: Don't draw the leftmost or rightmost column of
+			// black tiles (otherwise they "leak out" around the
+			// edges of the Sun Temple).  --achurch
+			if (v == OT_BLACK && ((dsq->game->getGridColumn(x-1))[y] != OT_BLACK || (dsq->game->getGridColumn(x+1))[y] != OT_BLACK))
+				v = OT_EMPTY;
 
-		for ( ; y <= endY; ++y)
-		{
-			if (y == endY)
+			if (v == obsType && startCol == -1)
+			{
+				startCol = y;
+			}
+			else if ((v != obsType || y == endY) && startCol != -1)
 			{
 				endCol = y;
-				goto do_draw;
-			}
-			else if (gridColumn[y] != obsType)
-			{
-				endCol = y - 1;
+				if (v != obsType)
+					endCol--;
 
-				do_draw:
-				const int drawx1 = x*TILE_SIZE;
-				const int drawx2 = (x+1)*TILE_SIZE;
-				const int drawy1 = startCol*TILE_SIZE;
-				const int drawy2 = (endCol+1)*TILE_SIZE;
+				const float drawx1 = x*TILE_SIZE;
+				const float drawx2 = (x+1)*TILE_SIZE;
+				const float drawy1 = startCol*TILE_SIZE;
+				const float drawy2 = (endCol+1)*TILE_SIZE;
 
 #ifdef BBGE_BUILD_OPENGL
 				glBegin(GL_QUADS);
-					glVertex3i(drawx1, drawy2, 0.0f);
-					glVertex3i(drawx2, drawy2, 0.0f);
-					glVertex3i(drawx2, drawy1, 0.0f);
-					glVertex3i(drawx1, drawy1, 0.0f);
+					glVertex3f(drawx1, drawy2, 0.0f);
+					glVertex3f(drawx2, drawy2, 0.0f);
+					glVertex3f(drawx2, drawy1, 0.0f);
+					glVertex3f(drawx1, drawy1, 0.0f);
 				glEnd();
 #endif
 
@@ -124,14 +121,7 @@ void GridRender::onRender()
 					drawx2, drawy2,
 					drawx1, drawy2);
 #endif
-				// fast-forward to next drawable byte
-				if(const signed char *next = (const signed char*)memchr(gridColumn + y, obsType, endY - y)) // find next byte with correct obs type
-				{
-					y = next - gridColumn; // will get incremented right away, which is okay, because we alrady set startCol
-					startCol = y;
-				}
-				else
-					break;
+				startCol = -1;
 			}
 		}
 	}
