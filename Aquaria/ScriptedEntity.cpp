@@ -28,6 +28,7 @@ bool ScriptedEntity::runningActivation = false;
 
 ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, EntityType et) : CollideEntity(), Segmented(2, 26)
 {
+	addType(SCO_SCRIPTED_ENTITY);
 	crushDelay = 0;
 	autoSkeletalSpriteUpdate = true;
 	script = 0;

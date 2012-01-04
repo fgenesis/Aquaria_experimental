@@ -78,8 +78,8 @@ class ScriptInterface
 {
 public:
 	ScriptInterface();
-
 	void init();
+	void reset();
 	void collectGarbage();
 	void shutdown();
 

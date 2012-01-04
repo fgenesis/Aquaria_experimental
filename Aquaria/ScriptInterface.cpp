@@ -41,21 +41,31 @@ extern "C"
 
 #if !(defined(AQUARIA_FULL) || defined(AQUARIA_DEMO))
 
+// Define this to 1 to check types of pointers passed to functions,
+// and warn if a type mismatch is detected. In this case,
+// the pointer is treated as NULL, to avoid crashing or undefined behavior.
+#define CHECK_POINTER_TYPES 1
+
 // If true, send all sort of script errors to errorLog instead of debugLog.
-// On win32, this pops up message boxes which help to locate errors easily,
+// On win32/OSX, this pops up message boxes which help to locate errors easily,
 // but can be annoying for regular gameplay.
 const bool loudScriptErrors = true;
 
+// This setting causes NULL/0 pointers passed to a function to issue
+// a Lua error instead of silently ignoring it.
+// Some functions expect this behavior - do not enable!.
 const bool throwLuaErrors = false;
 
 // Set this to true to complain (via errorLog()) whenever a script tries to
 // get or set a global variable.
 const bool complainOnGlobalVar = true;
+
 // Set this to true to complain whenever a script tries to get an undefined
 // thread-local variable.
 const bool complainOnUndefLocal = true;
 
 #else
+// No pointer type checks here!
 const bool loudScriptErrors = false;
 const bool throwLuaErrors = false;
 const bool complainOnGlobalVar = false;
@@ -350,10 +360,75 @@ static inline void luaPushPointer(lua_State *L, void *ptr)
 		lua_pushnumber(L, 0);
 }
 
+static std::string luaFormatStackInfo(lua_State *L)
+{
+	lua_Debug ar;
+	if (lua_getstack(L, 1, &ar))
+		lua_getinfo(L, "Sl", &ar);
+	else
+	{
+		snprintf(ar.short_src, sizeof(ar.short_src), "???");
+		ar.currentline = 0;
+	}
+	std::ostringstream os;
+	os << ar.short_src << ":" << ar.currentline;
+	return os.str();
+}
+
+
+#if CHECK_POINTER_TYPES
+// Not intended to be called.
+// Because wild typecasting expects X::_objtype to reside at the same relative
+// memory location, be sure this is the case before running into undefined behavior later.
+// - The C++ standard allows offsetof() only on POD-types. Oh well, it probably works anyways.
+// If it does not compile for some reason, comment it out, hope for the best, and go ahead.
+void compile_time_assertions()
+{
+#define oo(cls) offsetof(cls, _objtype)
+#define compile_assert(pred) switch(0){case 0:case (pred):;}
+	compile_assert(oo(Path) == oo(Entity));
+	compile_assert(oo(Path) == oo(Ingredient));
+	compile_assert(oo(Path) == oo(CollideEntity));
+	compile_assert(oo(Path) == oo(ScriptedEntity));
+	compile_assert(oo(Path) == oo(Beam));
+	compile_assert(oo(Path) == oo(Shot));
+	compile_assert(oo(Path) == oo(Web));
+	compile_assert(oo(Path) == oo(Bone));
+	compile_assert(oo(Path) == oo(PauseQuad));
+	compile_assert(oo(Path) == oo(Avatar));
+#undef oo
+#undef compile_assert
+}
+
+template <typename T>
+static void ensureType(lua_State *L, T *& ptr, ScriptObjectType ty)
+{
+	if (ptr)
+	{
+		ScriptObject *so = (ScriptObject*)(ptr);
+		if (!so->isType(ty))
+		{
+			std::ostringstream os;
+			os << "WARNING: " << luaFormatStackInfo(L)
+				<< ": script passed wrong pointer to function (expected type: "
+				<< ScriptObject::getTypeString(ty) << "; got: "
+				<< so->getTypeString() << ')';
+			scriptError(os.str());
+
+			ptr = NULL; // note that the pointer is passed by reference
+		}
+	}
+}
+#  define ENSURE_TYPE(ptr, ty) ensureType(L, (ptr), (ty))
+#else
+#  define ENSURE_TYPE(ptr, ty)
+#endif
+
 static inline
 ScriptedEntity *scriptedEntity(lua_State *L, int slot = 1)
 {
 	ScriptedEntity *se = (ScriptedEntity*)lua_touserdata(L, slot);
+	ENSURE_TYPE(se, SCO_SCRIPTED_ENTITY);
 	if (!se)
 		debugLog("ScriptedEntity invalid pointer.");
 	return se;
@@ -363,25 +438,17 @@ static inline
 CollideEntity *collideEntity(lua_State *L, int slot = 1)
 {
 	CollideEntity *ce = (CollideEntity*)lua_touserdata(L, slot);
+	ENSURE_TYPE(ce, SCO_COLLIDE_ENTITY);
 	if (!ce)
 		debugLog("CollideEntity invalid pointer.");
 	return ce ;
 }
 
 static inline
-RenderObject *object(lua_State *L, int slot = 1)
-{
-	//RenderObject *obj = dynamic_cast<RenderObject*>((RenderObject*)(int(lua_tonumber(L, slot))));
-	RenderObject *obj = static_cast<RenderObject*>(lua_touserdata(L, slot));
-	if (!obj)
-		debugLog("RenderObject invalid pointer");
-	return obj;
-}
-
-static inline
 Beam *beam(lua_State *L, int slot = 1)
 {
 	Beam *b = (Beam*)lua_touserdata(L, slot);
+	ENSURE_TYPE(b, SCO_BEAM);
 	if (!b)
 		debugLog("Beam invalid pointer.");
 	return b;
@@ -402,6 +469,7 @@ static inline
 Shot *getShot(lua_State *L, int slot = 1)
 {
 	Shot *shot = (Shot*)lua_touserdata(L, slot);
+	ENSURE_TYPE(shot, SCO_SHOT);
 	return shot;
 }
 
@@ -409,13 +477,16 @@ static inline
 Web *getWeb(lua_State *L, int slot = 1)
 {
 	Web *web = (Web*)lua_touserdata(L, slot);
+	ENSURE_TYPE(web, SCO_WEB);
 	return web;
 }
 
 static inline
 Ingredient *getIng(lua_State *L, int slot = 1)
 {
-	return (Ingredient*)lua_touserdata(L, slot);
+	Ingredient *ing = (Ingredient*)lua_touserdata(L, slot);
+	ENSURE_TYPE(ing, SCO_INGREDIENT);
+	return ing;
 }
 
 static inline
@@ -440,6 +511,7 @@ static inline
 Entity *entity(lua_State *L, int slot = 1)
 {
 	Entity *ent = (Entity*)lua_touserdata(L, slot);
+	ENSURE_TYPE(ent, SCO_ENTITY);
 	if (!ent)
 	{
 		luaErrorMsg(L, "Entity Invalid Pointer");
@@ -459,6 +531,7 @@ static inline
 Bone *bone(lua_State *L, int slot = 1)
 {
 	Bone *b = (Bone*)lua_touserdata(L, slot);
+	ENSURE_TYPE(b, SCO_BONE);
 	if (!b)
 	{
 		luaErrorMsg(L, "Bone Invalid Pointer");
@@ -483,6 +556,7 @@ static inline
 Path *path(lua_State *L, int slot = 1)
 {
 	Path *p = (Path*)lua_touserdata(L, slot);
+	ENSURE_TYPE(p, SCO_PATH);
 	return p;
 }
 
@@ -501,28 +575,15 @@ static RenderObject *boneToRenderObject(lua_State *L, int slot = 1)
 static PauseQuad *getPauseQuad(lua_State *L, int slot = 1)
 {
 	PauseQuad *q = (PauseQuad*)lua_touserdata(L, slot);
-	if (q)
-		return q;
-	else
-		scriptError("Invalid PauseQuad/Particle", L);
-	return 0;
+	ENSURE_TYPE(q, SCO_PAUSEQUAD);
+	if (!q)
+		errorLog("Invalid PauseQuad/Particle");
+	return q;
 }
 
 static SkeletalSprite *getSkeletalSprite(Entity *e)
 {
-	Avatar *a;
-	ScriptedEntity *se;
-	SkeletalSprite *skel = 0;
-	if ((a = dynamic_cast<Avatar*>(e)) != 0)
-	{
-		//a->skeletalSprite.transitionAnimate(lua_tostring(L, 2), 0.15, lua_tointeger(L, 3));
-		skel = &a->skeletalSprite;
-	}
-	else if ((se = dynamic_cast<ScriptedEntity*>(e)) != 0)
-	{
-		skel = &se->skeletalSprite;
-	}
-	return skel;
+	return e ? &e->skeletalSprite : NULL;
 }
 
 static bool looksLikeGlobal(const char *s)
@@ -575,20 +636,8 @@ luaFunc(indexWarnGlobal)
 
 		if (doWarn)
 		{
-			lua_Debug ar;
-			if (lua_getstack(L, 1, &ar))
-			{
-				lua_getinfo(L, "Sl", &ar);
-			}
-			else
-			{
-				snprintf(ar.short_src, sizeof(ar.short_src), "???");
-				ar.currentline = 0;
-			}
-
-			lua_getinfo(L, "Sl", &ar);
 			std::ostringstream os;
-			os << "WARNING: " << ar.short_src << ":" << ar.currentline
+			os << "WARNING: " << luaFormatStackInfo(L)
 			   << ": script tried to get/call undefined global variable "
 			   << varname;
 			scriptError(os.str());
@@ -615,22 +664,11 @@ luaFunc(newindexWarnGlobal)
 
 	if (doWarn)
 	{
-		lua_Debug ar;
-		if (lua_getstack(L, 1, &ar))
-		{
-			lua_getinfo(L, "Sl", &ar);
-		}
-		else
-		{
-			snprintf(ar.short_src, sizeof(ar.short_src), "???");
-			ar.currentline = 0;
-		}
-
 		std::ostringstream os;
-		os << "WARNING: " << ar.short_src << ":" << ar.currentline
+		os << "WARNING: " << luaFormatStackInfo(L)
 		   << ": script set global "
 		   << (lua_type(L, -2) == LUA_TFUNCTION ? "function" : "variable")
-		   << " " << lua_tostring(L, -1);
+		   << " " << varname;
 		scriptError(os.str());
 	}
 
@@ -649,18 +687,8 @@ luaFunc(indexWarnInstance)
 	lua_remove(L, -3);
 	if (lua_isnil(L, -1))
 	{
-		lua_Debug ar;
-		if (lua_getstack(L, 1, &ar))
-		{
-			lua_getinfo(L, "Sl", &ar);
-		}
-		else
-		{
-			snprintf(ar.short_src, sizeof(ar.short_src), "???");
-			ar.currentline = 0;
-		}
 		std::ostringstream os;
-		os << "WARNING: " << ar.short_src << ":" << ar.currentline
+		os << "WARNING: " << luaFormatStackInfo(L)
 		   << ": script tried to get/call undefined instance variable "
 		   << lua_tostring(L, -2);
 		scriptError(os.str());
@@ -1875,14 +1903,6 @@ luaFunc(loadMap)
 
 luaFunc(entity_followPath)
 {
-	/*
-	std::ostringstream os2;
-	os2 << lua_tointeger(L, 1);
-	errorLog(os2.str());
-	std::ostringstream os;
-	os << "Entity: " << scriptedEntity(L)->name << " moving on Path: " << lua_tostring(L, 2);
-	debugLog(os.str());
-	*/
 	Entity *e = entity(L);
 	if (e)
 	{
@@ -3706,13 +3726,17 @@ luaFunc(entity_rotateToVec)
 
 luaFunc(entity_update)
 {
-	entity(L)->update(lua_tonumber(L, 2));
+	Entity *e = entity(L);
+	if (e)
+		e->update(lua_tonumber(L, 2));
 	luaReturnNum(0);
 }
 
 luaFunc(entity_updateSkeletal)
 {
-	entity(L)->skeletalSprite.update(lua_tonumber(L, 2));
+	Entity *e = entity(L);
+	if (e)
+		e->skeletalSprite.update(lua_tonumber(L, 2));
 	luaReturnNum(0);
 }
 
@@ -3731,17 +3755,21 @@ luaFunc(entity_msg)
 
 luaFunc(entity_updateCurrents)
 {
-	luaReturnBool(entity(L)->updateCurrents(lua_tonumber(L, 2)));
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->updateCurrents(lua_tonumber(L, 2)) : false);
 }
 
 luaFunc(entity_updateLocalWarpAreas)
 {
-	luaReturnBool(entity(L)->updateLocalWarpAreas(getBool(L, 2)));
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->updateLocalWarpAreas(getBool(L, 2)) : false);
 }
 
 luaFunc(entity_updateMovement)
 {
-	scriptedEntity(L)->updateMovement(lua_tonumber(L, 2));
+	ScriptedEntity *e = scriptedEntity(L);
+	if (e)
+		e->updateMovement(lua_tonumber(L, 2));
 	luaReturnNum(0);
 }
 
@@ -6654,12 +6682,14 @@ luaFunc(entity_getTarget)
 
 luaFunc(entity_getTargetPositionX)
 {
-	luaReturnInt(int(entity(L)->getTargetEntity()->position.x));
+	Entity *e = entity(L);
+	luaReturnInt(e ? e->getTargetEntity()->position.x : 0);
 }
 
 luaFunc(entity_getTargetPositionY)
 {
-	luaReturnInt(int(entity(L)->getTargetEntity()->position.y));
+	Entity *e = entity(L);
+	luaReturnNum(e ? e->getTargetEntity()->position.y : 0);
 }
 
 luaFunc(entity_isNearObstruction)
@@ -7163,7 +7193,6 @@ luaFunc(entity_setFlag)
 luaFunc(entity_getFlag)
 {
     Entity *e = entity(L);
-    int v = lua_tonumber(L, 2);
     int ret = 0;
     if (e)
     {
@@ -8909,6 +8938,12 @@ void ScriptInterface::init()
 {
 	if (!baseState)
 		baseState = createLuaVM();
+}
+
+void ScriptInterface::reset()
+{
+	shutdown();
+	init();
 }
 
 void ScriptInterface::shutdown()

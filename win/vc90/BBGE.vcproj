@@ -472,6 +472,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\ScriptObject.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\Shader.cpp"
 				>
 			</File>

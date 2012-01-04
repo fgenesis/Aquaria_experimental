@@ -202,8 +202,7 @@ void Mod::applyStart()
 	recache();
 	dsq->continuity.reset();
 
-	dsq->scriptInterface.shutdown();
-	dsq->scriptInterface.init();
+	dsq->scriptInterface.reset();
 	
 	// load the mod-init.lua file
 	// which is in the root of the mod's folder
@@ -277,8 +276,7 @@ void Mod::stop()
 	debugMenu = false;
 	shuttingDown = false;
 
-	dsq->scriptInterface.shutdown();
-	dsq->scriptInterface.init();
+	dsq->scriptInterface.reset();
 }
 
 void Mod::update(float dt)
