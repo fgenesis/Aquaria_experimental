@@ -491,9 +491,9 @@ Animation* AnimationLayer::getCurrentAnimation()
 	if (currentAnimation < 0 || currentAnimation >= s->animations.size())
 	{
 		std::ostringstream os;
-		os << "skel: " << s->filenameLoaded << " currentAnimation: " << currentAnimation << " is out of range\n error in anim file?";
+		os << "skel: " << s->filenameLoaded << "name: " << name << " currentAnimation: " << currentAnimation << " is out of range\n error in anim file?";
 		errorLog(os.str());
-		exit(-1);
+		//exit(-1);
 		return 0;
 	}
 	return &s->animations[currentAnimation];

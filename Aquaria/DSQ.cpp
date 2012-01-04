@@ -3067,6 +3067,7 @@ void DSQ::title(bool fade)
     applyPatches(); // FG: FIXME: is this a good spot for this?
 
 	core->settings.runInBackground = false;
+	recentSaveSlot = -1;
 
 	dsq->overlay->color = 0;
 	dsq->overlay->alpha.interpolateTo(1, 1);

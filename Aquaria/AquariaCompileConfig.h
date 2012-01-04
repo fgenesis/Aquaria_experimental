@@ -6,8 +6,7 @@
 #define AQUARIA_BUILD_CONSOLE 1
 #define AQUARIA_BUILD_SCENEEDITOR 1
 
-#define AQUARIA_CUSTOM_BUILD_ID "-experimental-v13-dev [fgenesis]"
-//#define AQUARIA_CUSTOM_BUILD_ID "-community"
+#define AQUARIA_CUSTOM_BUILD_ID "-experimental-[Jan2012] [fgenesis]"
 
 // no console window in release mode (note: use together with linker SubSystem setting)
 // (FG: This setting is deprecated. However, it should work if linking SDLmain causes trouble for some reason)

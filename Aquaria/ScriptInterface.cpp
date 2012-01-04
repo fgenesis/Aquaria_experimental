@@ -2684,16 +2684,16 @@ luaFunc(entity_setAnimLayerTimeMult)
 luaFunc(entity_animate)
 {
 	SkeletalSprite *skel = getSkeletalSprite(entity(L));
-
-	// 0.15
-	// 0.2
-	float transition = lua_tonumber(L, 5);
-	if (transition == -1)
-		transition = 0;
-	else if (transition == 0)
-		transition = 0.2;
-	float ret = skel->transitionAnimate(lua_tostring(L, 2), transition, lua_tointeger(L, 3), lua_tointeger(L, 4));
-
+	float ret = 0;
+	if (skel)
+	{
+		float transition = lua_tonumber(L, 5);
+		if (transition == -1)
+			transition = 0;
+		else if (transition == 0)
+			transition = 0.2;
+		ret = skel->transitionAnimate(lua_tostring(L, 2), transition, lua_tointeger(L, 3), lua_tointeger(L, 4));
+	}
 	luaReturnNum(ret);
 }
 
@@ -8900,9 +8900,21 @@ static const struct {
 // F U N C T I O N S
 //============================================================================================
 
+ScriptInterface::ScriptInterface()
+: baseState(NULL)
+{
+}
+
 void ScriptInterface::init()
 {
-	baseState = createLuaVM();
+	if (!baseState)
+		baseState = createLuaVM();
+}
+
+void ScriptInterface::shutdown()
+{
+	destroyLuaVM(baseState);
+	baseState = NULL;
 }
 
 lua_State *ScriptInterface::createLuaVM()
@@ -9062,10 +9074,6 @@ int ScriptInterface::destroyLuaThread(const std::string &file, lua_State *thread
 void ScriptInterface::collectGarbage()
 {
 	lua_gc(baseState, LUA_GCCOLLECT, 0);
-}
-
-void ScriptInterface::shutdown()
-{
 }
 
 Script *ScriptInterface::openScript(const std::string &file, bool ignoremissing /* = false */)

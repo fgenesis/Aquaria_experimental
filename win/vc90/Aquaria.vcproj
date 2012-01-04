@@ -40,6 +40,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions=""
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.2.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.1\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.4\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1"
@@ -62,6 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions=""
 				AdditionalDependencies="SDLmain.lib"
 				OutputFile="$(OutDir)\$(ProjectName)d.exe"
 				LinkIncremental="2"
@@ -125,6 +127,94 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.2.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.1\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.4\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;_HAS_EXCEPTIONS=0"
+				StringPooling="true"
+				ExceptionHandling="0"
+				RuntimeLibrary="0"
+				BufferSecurityCheck="false"
+				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalOptions="  --cs-on --cs-condition --cs-hit --cs-full-instrumentation --cs-libgen=/MT"
+				AdditionalDependencies="SDLmain.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_fg.exe"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="$(SolutionDir)\..\ExternalLibs\SDL12\lib\win32"
+				IgnoreDefaultLibraryNames="msvcrt.lib"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release - LuaJIT|Win32"
+			OutputDirectory="$(SolutionDir)\..\bin"
+			IntermediateDirectory="$(SolutionDir)\temp\$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="1"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="3"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				EnableFiberSafeOptimizations="true"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.2.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.1\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.4\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -146,10 +236,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDLmain.lib"
+				AdditionalOptions="  --cs-on --cs-condition --cs-hit --cs-full-instrumentation --cs-libgen=/MT"
+				AdditionalDependencies="SDLmain.lib lua51.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_fg.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(SolutionDir)\..\ExternalLibs\SDL12\lib\win32"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\SDL12\lib\win32&quot;;&quot;$(SolutionDir)\..\ExternalLibs\luajit\src\&quot;"
 				IgnoreDefaultLibraryNames="msvcrt.lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"

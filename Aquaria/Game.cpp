@@ -11163,7 +11163,7 @@ Vector Game::getClosestPointOnLine(Vector a, Vector b, Vector p)
    return a + V;
 }
 
-bool Game::collideCircleWithGrid(Vector position, int r, Vector *fill)
+bool Game::collideCircleWithGrid(const Vector& position, int r)
 {
 	Vector tile = position;
 	TileVector t(tile);
@@ -11228,7 +11228,7 @@ bool Game::collideCircleWithGrid(Vector position, int r, Vector *fill)
 	return false;
 }
 
-bool Game::collideBoxWithGrid(Vector position, int hw, int hh)
+bool Game::collideBoxWithGrid(const Vector& position, int hw, int hh)
 {
 	Vector tile = position;
 	TileVector t(tile);

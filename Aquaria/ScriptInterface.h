@@ -77,6 +77,8 @@ protected:
 class ScriptInterface
 {
 public:
+	ScriptInterface();
+
 	void init();
 	void collectGarbage();
 	void shutdown();

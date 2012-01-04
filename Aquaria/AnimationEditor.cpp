@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
 
 
-const int TIMELINE_GRIDSIZE		= 10;
+const int TIMELINE_GRIDSIZE		= 15;
 const float TIMELINE_UNIT		= 0.1;
 
 AnimationEditor *ae = 0;

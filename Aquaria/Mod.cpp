@@ -189,7 +189,8 @@ void Mod::start()
 
 	core->sound->stopMusic();
 	
-	enqueueModStart = 1;	
+	enqueueModStart = 1;
+	dsq->recentSaveSlot = -1;
 }
 
 void Mod::applyStart()
@@ -200,6 +201,9 @@ void Mod::applyStart()
 	core->clearGarbage();
 	recache();
 	dsq->continuity.reset();
+
+	dsq->scriptInterface.shutdown();
+	dsq->scriptInterface.init();
 	
 	// load the mod-init.lua file
 	// which is in the root of the mod's folder
@@ -272,6 +276,9 @@ void Mod::stop()
 	core->settings.runInBackground = false;
 	debugMenu = false;
 	shuttingDown = false;
+
+	dsq->scriptInterface.shutdown();
+	dsq->scriptInterface.init();
 }
 
 void Mod::update(float dt)
