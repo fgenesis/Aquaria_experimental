@@ -621,7 +621,6 @@ SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ttvfs lvpa lvpa_ttvfs)
 IF(MACOSX)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Cocoa")
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenGL")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenAL")
 ENDIF(MACOSX)
 

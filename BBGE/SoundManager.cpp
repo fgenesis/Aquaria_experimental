@@ -1081,6 +1081,9 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 			checkError();
 			*/
 
+			voiceChannel->setPan(0);
+			voiceChannel->setFrequency(1);
+
 			result = voiceChannel->setPaused(false);
 			checkError();
 

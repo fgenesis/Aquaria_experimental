@@ -3358,7 +3358,7 @@ void SceneEditor::updateText()
 				ElementTemplate *et = game->getElementTemplateByIdx(e->templateIdx);
 				if (et)
 					os << " gfx: " << et->gfx;
-				os << " efx: " << e->getElementEffectIndex();
+				os << " efx: " << (e->getElementEffectIndex() + 1);
 			}
 		}
 	break;

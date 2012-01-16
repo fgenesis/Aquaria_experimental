@@ -391,6 +391,13 @@ void OggDecoder::decode_loop(OggDecoder *this_)
     }
 }
 
+#if (defined(BBGE_BUILD_SDL) && (SDL_BYTEORDER == SDL_BIG_ENDIAN))
+#define BBGE_BIGENDIAN 1
+#else
+#define BBGE_BIGENDIAN 0
+#endif
+
+
 void OggDecoder::queue(ALuint buffer)
 {
     if (!playing || eof)
@@ -406,7 +413,8 @@ void OggDecoder::queue(ALuint buffer)
         int bitstream_unused;
         const int nread = ov_read(
             &vf, pcm_buffer + pcm_size, buffer_size - pcm_size,
-            /*bigendianp*/ 0, /*word*/ 2, /*sgned*/ 1, &bitstream_unused
+			/*bigendianp*/ BBGE_BIGENDIAN, /*word*/ 2, /*sgned*/ 1,
+			&bitstream_unused
         );
         if (nread == 0 || nread == OV_EOF)
         {
