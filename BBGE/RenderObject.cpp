@@ -176,7 +176,6 @@ RenderObject::RenderObject()
 	motionBlurFrameOffset = 0;
 	motionBlur = false;
 	idx = -1;
-	renderBorders = false;
 #ifdef BBGE_BUILD_DIRECTX
 	useDXTransform = false;
 #endif
@@ -496,18 +495,26 @@ void RenderObject::disableMotionBlur()
 
 bool RenderObject::isfhr()
 {
-	if (parent)
-		return parent->isfhr();
-	else
-		return this->isfh();
+	RenderObject *p = this;
+	bool fh = false;
+	do
+		if (p->isfh())
+			fh = !fh;
+	while ((p = p->parent));
+	return fh;
+
 }
 
 bool RenderObject::isfvr()
 {
-	if (parent)
-		return parent->isfvr();
-	else
-		return this->isfv();
+	RenderObject *p = this;
+	bool fv = false;
+	do
+		if (p->isfv())
+			fv = !fv;
+	while ((p = p->parent));
+	return fv;
+
 }
 
 bool RenderObject::hasRenderPass(const int pass)

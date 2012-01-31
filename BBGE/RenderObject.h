@@ -274,8 +274,6 @@ public:
 	bool shareAlphaWithChildren;
 	bool shareColorWithChildren;
 
-	bool renderBorders;
-
 	bool cull;
 	int updateCull;
 	int layer;
