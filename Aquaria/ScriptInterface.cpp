@@ -310,11 +310,8 @@ static std::string luaDebugInfo(lua_State *L)
         ar.currentline = 0;
     }
 
-    lua_getinfo(L, "Sl", &ar);
-
     std::ostringstream os;
     os << ar.short_src << ":" << ar.currentline;
-
     return os.str();
 }
 
@@ -360,21 +357,6 @@ static inline void luaPushPointer(lua_State *L, void *ptr)
 		lua_pushnumber(L, 0);
 }
 
-static std::string luaFormatStackInfo(lua_State *L)
-{
-	lua_Debug ar;
-	if (lua_getstack(L, 1, &ar))
-		lua_getinfo(L, "Sl", &ar);
-	else
-	{
-		snprintf(ar.short_src, sizeof(ar.short_src), "???");
-		ar.currentline = 0;
-	}
-	std::ostringstream os;
-	os << ar.short_src << ":" << ar.currentline;
-	return os.str();
-}
-
 
 #if CHECK_POINTER_TYPES
 // Not intended to be called.
@@ -409,7 +391,7 @@ static void ensureType(lua_State *L, T *& ptr, ScriptObjectType ty)
 		if (!so->isType(ty))
 		{
 			std::ostringstream os;
-			os << "WARNING: " << luaFormatStackInfo(L)
+			os << "WARNING: " << luaDebugInfo(L)
 				<< ": script passed wrong pointer to function (expected type: "
 				<< ScriptObject::getTypeString(ty) << "; got: "
 				<< so->getTypeString() << ')';
@@ -604,7 +586,7 @@ static bool looksLikeGlobal(const char *s)
 #define luaReturnStr(str)	do {lua_pushstring(L, (str)); return 1;} while(0)
 #define luaReturnVec2(x,y)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); return 2;} while(0)
 #define luaReturnVec3(x,y,z)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); lua_pushnumber(L, (z)); return 3;} while(0)
-
+#define luaReturnNil()	    do {return 0;} while(0)
 
 // Set the global "v" to the instance's local variable table.  Must be
 // called when starting a script.
@@ -637,7 +619,7 @@ luaFunc(indexWarnGlobal)
 		if (doWarn)
 		{
 			std::ostringstream os;
-			os << "WARNING: " << luaFormatStackInfo(L)
+			os << "WARNING: " << luaDebugInfo(L)
 			   << ": script tried to get/call undefined global variable "
 			   << varname;
 			scriptError(os.str());
@@ -665,7 +647,7 @@ luaFunc(newindexWarnGlobal)
 	if (doWarn)
 	{
 		std::ostringstream os;
-		os << "WARNING: " << luaFormatStackInfo(L)
+		os << "WARNING: " << luaDebugInfo(L)
 		   << ": script set global "
 		   << (lua_type(L, -2) == LUA_TFUNCTION ? "function" : "variable")
 		   << " " << varname;
@@ -688,7 +670,7 @@ luaFunc(indexWarnInstance)
 	if (lua_isnil(L, -1))
 	{
 		std::ostringstream os;
-		os << "WARNING: " << luaFormatStackInfo(L)
+		os << "WARNING: " << luaDebugInfo(L)
 		   << ": script tried to get/call undefined instance variable "
 		   << lua_tostring(L, -2);
 		scriptError(os.str());
@@ -760,19 +742,19 @@ luaFunc(randRange)
 luaFunc(upgradeHealth)
 {
 	dsq->continuity.upgradeHealth();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(shakeCamera)
 {
 	dsq->shakeCamera(lua_tonumber(L,1), lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(changeForm)
 {
 	dsq->game->avatar->changeForm((FormType)lua_tointeger(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getWaterLevel)
@@ -783,20 +765,20 @@ luaFunc(getWaterLevel)
 luaFunc(setPoison)
 {
 	dsq->continuity.setPoison(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(cureAllStatus)
 {
 	dsq->continuity.cureAllStatus();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setMusicToPlay)
 {
 	if (lua_isstring(L, 1))
 		dsq->game->setMusicToPlay(lua_tostring(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setActivePet)
@@ -808,7 +790,7 @@ luaFunc(setActivePet)
 
 luaFunc(setWaterLevel)
 {
-	dsq->game->waterLevel.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	dsq->game->waterLevel.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tointeger(L, 3), getBool(L, 4), getBool(L, 5));
 	luaReturnNum(dsq->game->waterLevel.x);
 }
 
@@ -827,7 +809,7 @@ luaFunc(isForm)
 luaFunc(learnFormUpgrade)
 {
 	dsq->continuity.learnFormUpgrade((FormUpgradeType)lua_tointeger(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(hasLi)
@@ -843,7 +825,7 @@ luaFunc(hasFormUpgrade)
 luaFunc(castSong)
 {
 	dsq->continuity.castSong(lua_tonumber(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(isStory)
@@ -890,13 +872,13 @@ luaFunc(foundLostMemory)
 
 	dsq->sound->playSfx("memory-found");
 
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(setStory)
 {
 	dsq->continuity.setStory(lua_tonumber(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(confirm)
@@ -984,7 +966,7 @@ luaFunc(web_delete)
 			e->setDecayRate(1.0/time);
 		}
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(shot_getPosition)
@@ -1008,7 +990,7 @@ luaFunc(shot_setVel)
 	{
 		shot->velocity = Vector(vx, vy);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(shot_setOut)
@@ -1026,7 +1008,7 @@ luaFunc(shot_setOut)
 		debugLog(os.str());
 		*/
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(shot_setAimVector)
@@ -1038,7 +1020,23 @@ luaFunc(shot_setAimVector)
 	{
 		shot->setAimVector(Vector(ax, ay));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
+}
+
+luaFunc(shot_addQuad)
+{
+    Shot *s = getShot(L, 1);
+    Quad *q = getPauseQuad(L, 2);
+    s->addChild(q, PM_POINTER);
+    luaReturnNil();
+}
+
+luaFunc(shot_removeQuad)
+{
+    Shot *s = getShot(L, 1);
+    Quad *q = getPauseQuad(L, 2);
+    s->removeChild(q);
+    luaReturnNil();
 }
 
 luaFunc(entity_addIgnoreShotDamageType)
@@ -1048,7 +1046,7 @@ luaFunc(entity_addIgnoreShotDamageType)
 	{
 		e->addIgnoreShotDamageType((DamageType)lua_tointeger(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_warpLastPosition)
@@ -1058,7 +1056,7 @@ luaFunc(entity_warpLastPosition)
 	{
 		e->warpLastPosition();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 
@@ -1079,7 +1077,7 @@ luaFunc(entity_velTowards)
 			e->vel2 += add;
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getBoneLockEntity)
@@ -1099,7 +1097,7 @@ luaFunc(entity_ensureLimit)
 {
 	Entity *e = entity(L);
 	dsq->game->ensureLimit(e, lua_tonumber(L, 2), lua_tonumber(L, 3));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setRidingPosition)
@@ -1107,7 +1105,7 @@ luaFunc(entity_setRidingPosition)
 	Entity *e = entity(L);
 	if (e)
 		e->setRidingPosition(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setRidingData)
@@ -1115,7 +1113,7 @@ luaFunc(entity_setRidingData)
 	Entity *e = entity(L);
 	if (e)
 		e->setRidingData(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), getBool(L, 5));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setBoneLock)
@@ -1145,7 +1143,7 @@ luaFunc(entity_setIngredient)
 	{
 		e->setIngredientData(getString(L,2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setSegsMaxDist)
@@ -1154,7 +1152,7 @@ luaFunc(entity_setSegsMaxDist)
 	if (se)
 		se->setMaxDist(lua_tonumber(L, 2));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setBounceType)
@@ -1174,13 +1172,13 @@ luaFunc(user_set_demo_intro)
 #ifndef AQUARIA_DEMO
 	dsq->user.demo.intro = lua_tonumber(L, 1);
 #endif
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(user_save)
 {
 	dsq->user.save();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setAutoSkeletalUpdate)
@@ -1210,7 +1208,7 @@ luaFunc(entity_setDieTimer)
 	{
 		e->setDieTimer(lua_tonumber(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setLookAtPoint)
@@ -1220,7 +1218,7 @@ luaFunc(entity_setLookAtPoint)
 	{
 		e->lookAtPoint = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getLookAtPoint)
@@ -1242,7 +1240,7 @@ luaFunc(entity_setLife)
 	{
 		e->setLife(lua_tonumber(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setRiding)
@@ -1255,7 +1253,7 @@ luaFunc(entity_setRiding)
 	{
 		e->setRiding(e2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getHealthPerc)
@@ -1285,7 +1283,7 @@ luaFunc(entity_setTargetPriority)
 	{
 		e->targetPriority = lua_tonumber(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(isQuitFlag)
@@ -1329,32 +1327,32 @@ luaFunc(isWithin)
 luaFunc(toggleDamageSprite)
 {
 	dsq->game->toggleDamageSprite(getBool(L));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(toggleCursor)
 {
 	dsq->toggleCursor(getBool(L, 1), lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(toggleBlackBars)
 {
 	dsq->toggleBlackBars(getBool(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setBlackBarsColor)
 {
 	Vector c(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
 	dsq->setBlackBarsColor(c);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(toggleLiCombat)
 {
 	dsq->continuity.toggleLiCombat(getBool(L));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getNoteName)
@@ -1379,7 +1377,7 @@ luaFunc(getNearestNodeByType)
 luaFunc(fadeOutMusic)
 {
 	dsq->sound->fadeMusic(SFT_OUT, lua_tonumber(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getNode)
@@ -1395,32 +1393,35 @@ luaFunc(getNodeToActivate)
 luaFunc(setNodeToActivate)
 {
 	dsq->game->avatar->pathToActivate = path(L, 1);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(setActivation)
 {
 	dsq->game->activation = getBool(L, 1);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(debugLog)
 {
 	const char *s = lua_tostring(L, 1);
-	debugLog(s);
+    if(s)
+	    debugLog(s);
+    else
+        scriptError("debugLog() invalid pointer", L);
 	luaReturnStr(s);
 }
 
 luaFunc(reconstructGrid)
 {
 	dsq->game->reconstructGrid(true);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(reconstructEntityGrid)
 {
 	dsq->game->reconstructEntityGrid();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setCanLeaveWater)
@@ -1431,7 +1432,7 @@ luaFunc(entity_setCanLeaveWater)
 	{
 		e->setCanLeaveWater(v);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setSegmentTexture)
@@ -1445,7 +1446,7 @@ luaFunc(entity_setSegmentTexture)
 			ro->setTexture(lua_tostring(L, 3));
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_findNearestEntityOfType)
@@ -1513,7 +1514,7 @@ luaFunc(entity_sound)
 			freq *= 0.001f;
 		e->sound(lua_tostring(L, 2), freq, lua_tonumber(L, 4));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_playSfx)
@@ -1546,7 +1547,7 @@ luaFunc(entity_setSpiritFreeze)
 	{
 		e->setSpiritFreeze(getBool(L,2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setFillGrid)
@@ -1557,7 +1558,7 @@ luaFunc(entity_setFillGrid)
 	{
 		e->fillGridFromQuad = b;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setTouchDamage)
@@ -1567,7 +1568,7 @@ luaFunc(entity_setTouchDamage)
 	{
 		e->touchDamage = lua_tonumber(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setCollideRadius)
@@ -1577,7 +1578,7 @@ luaFunc(entity_setCollideRadius)
 	{
 		e->collideRadius = lua_tonumber(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getNormal)
@@ -1661,7 +1662,7 @@ luaFunc(entity_setDropChance)
 			se->manaBallAmount = amount;
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_warpToNode)
@@ -1674,7 +1675,7 @@ luaFunc(entity_warpToNode)
 		e->position = p->nodes[0].position;
 		e->rotateToVec(Vector(0,-1), 0.1);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_stopPull)
@@ -1682,7 +1683,7 @@ luaFunc(entity_stopPull)
 	Entity *e = entity(L);
 	if (e)
 		e->stopPull();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_stopInterpolating)
@@ -1692,7 +1693,7 @@ luaFunc(entity_stopInterpolating)
 	{
 		e->position.stop();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_moveToNode)
@@ -1703,7 +1704,7 @@ luaFunc(entity_moveToNode)
 	{
 		e->moveToNode(p, lua_tointeger(L, 3), lua_tointeger(L, 4), 0);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_swimToNode)
@@ -1718,7 +1719,7 @@ luaFunc(entity_swimToNode)
 		se->swimPath = true;
 		*/
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_swimToPosition)
@@ -1737,7 +1738,7 @@ luaFunc(entity_swimToPosition)
 		se->swimPath = true;
 		*/
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 
@@ -1745,27 +1746,27 @@ luaFunc(avatar_setCanDie)
 {
 	dsq->game->avatar->canDie = getBool(L, 1);
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_toggleCape)
 {
 	dsq->game->avatar->toggleCape(getBool(L,1));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_setBlockSinging)
 {
 	bool b = getBool(L);
 	dsq->game->avatar->setBlockSinging(b);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_fallOffWall)
 {
 	dsq->game->avatar->fallOffWall();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_isBursting)
@@ -1816,13 +1817,13 @@ luaFunc(avatar_getSpellCharge)
 luaFunc(jumpState)
 {
 	dsq->enqueueJumpState(lua_tostring(L, 1), getBool(L, 2));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(goToTitle)
 {
 	dsq->title();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getEnqueuedState)
@@ -1833,37 +1834,37 @@ luaFunc(getEnqueuedState)
 luaFunc(learnSong)
 {
 	dsq->continuity.learnSong(lua_tointeger(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(unlearnSong)
 {
 	dsq->continuity.unlearnSong(lua_tointeger(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(showInGameMenu)
 {
 	dsq->game->showInGameMenu(getBool(L, 1), getBool(L, 2), (MenuPage)lua_tointeger(L, 3));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(hideInGameMenu)
 {
 	dsq->game->hideInGameMenu();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(showImage)
 {
 	dsq->game->showImage(getString(L));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(hideImage)
 {
 	dsq->game->hideImage();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(hasSong)
@@ -1898,7 +1899,7 @@ luaFunc(loadMap)
 			dsq->game->transitionToScene(s);
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_followPath)
@@ -1912,7 +1913,7 @@ luaFunc(entity_followPath)
 
 		e->followPath(p, speedType, dir);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_enableMotionBlur)
@@ -1920,7 +1921,7 @@ luaFunc(entity_enableMotionBlur)
 	Entity *e = entity(L);
 	if (e)
 		e->enableMotionBlur(10, 2);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_disableMotionBlur)
@@ -1928,7 +1929,7 @@ luaFunc(entity_disableMotionBlur)
 	Entity *e = entity(L);
 	if (e)
 		e->disableMotionBlur();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_warpToPathStart)
@@ -1945,7 +1946,7 @@ luaFunc(entity_warpToPathStart)
 		e->warpToPathStart();
 		e->stopFollowingPath();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getIngredientGfx)
@@ -1972,13 +1973,13 @@ luaFunc(getNearestIngredient)
 luaFunc(spawnAllIngredients)
 {
 	dsq->spawnAllIngredients(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(spawnParticleEffect)
 {
 	dsq->spawnParticleEffect(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 5), lua_tonumber(L, 4));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_showFrame)
@@ -1986,7 +1987,7 @@ luaFunc(bone_showFrame)
 	Bone *b = bone(L);
 	if (b)
 		b->showFrame(lua_tointeger(L, 2));
-	luaReturnNum(1);
+	luaReturnNil();
 }
 
 luaFunc(bone_setRenderPass)
@@ -1996,7 +1997,7 @@ luaFunc(bone_setRenderPass)
 	{
 		b->setRenderPass(lua_tonumber(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_setSegmentOffset)
@@ -2004,7 +2005,7 @@ luaFunc(bone_setSegmentOffset)
 	Bone *b = bone(L);
 	if (b)
 		b->segmentOffset = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_setSegmentProps)
@@ -2014,7 +2015,7 @@ luaFunc(bone_setSegmentProps)
 	{
 		b->setSegmentProps(lua_tonumber(L, 2), lua_tonumber(L, 3), getBool(L, 4));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_setSegmentChainHead)
@@ -2027,7 +2028,7 @@ luaFunc(bone_setSegmentChainHead)
 		else
 			b->segmentChain = 0;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_addSegment)
@@ -2036,7 +2037,7 @@ luaFunc(bone_addSegment)
 	Bone *b2 = bone(L, 2);
 	if (b && b2)
 		b->addSegment(b2);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_setAnimated)
@@ -2046,7 +2047,7 @@ luaFunc(bone_setAnimated)
 	{
 		b->setAnimated(lua_tointeger(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_lookAtEntity)
@@ -2062,7 +2063,7 @@ luaFunc(bone_lookAtEntity)
 		}
 		b->lookAt(pos, lua_tonumber(L, 3), lua_tonumber(L, 4),lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_setSegs)
@@ -2070,7 +2071,7 @@ luaFunc(bone_setSegs)
 	Bone *b = bone(L);
 	if (b)
 		b->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setSegs)
@@ -2078,7 +2079,7 @@ luaFunc(entity_setSegs)
 	Entity *e = entity(L);
 	if (e)
 		e->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_resetTimer)
@@ -2086,7 +2087,7 @@ luaFunc(entity_resetTimer)
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 		se->resetTimer(lua_tonumber(L, 2));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_stopFollowingPath)
@@ -2099,7 +2100,7 @@ luaFunc(entity_stopFollowingPath)
 			e->stopFollowingPath();
 		}
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_slowToStopPath)
@@ -2117,7 +2118,7 @@ luaFunc(entity_slowToStopPath)
 			debugLog("wasn't following path");
 		}
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_stopTimer)
@@ -2125,15 +2126,16 @@ luaFunc(entity_stopTimer)
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se)
 		se->stopTimer();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_createEntity)
 {
 	Entity *e = entity(L);
+    Entity *ret = NULL;
 	if (e)
-		dsq->game->createEntity(dsq->getEntityTypeIndexByName(lua_tostring(L, 2)), 0, e->position, 0, false, "", ET_ENEMY, 0, 0, true);
-	luaReturnInt(0);
+		ret = dsq->game->createEntity(dsq->getEntityTypeIndexByName(lua_tostring(L, 2)), 0, e->position, 0, false, "", ET_ENEMY, 0, 0, true);
+	luaReturnPtr(ret);
 }
 
 luaFunc(entity_checkSplash)
@@ -2182,7 +2184,7 @@ luaFunc(avatar_setPullTarget)
 	if (e)
 		e->startPull();
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isDead)
@@ -2257,13 +2259,13 @@ luaFunc(entity_waitForPath)
 	{
 		core->main(FRAME_TIME);
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(quitNestedMain)
 {
 	core->quitNestedMain();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(isNestedMain)
@@ -2282,7 +2284,7 @@ luaFunc(entity_watchForPath)
 	}
 
 	dsq->game->avatar->enableInput();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 
@@ -2298,7 +2300,7 @@ luaFunc(watchForVoice)
 			break;
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 
@@ -2320,7 +2322,7 @@ luaFunc(entity_resumePath)
 	{
 		e->position.resumePath();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isAnimating)
@@ -2382,7 +2384,7 @@ luaFunc(entity_toggleBone)
 	{
 		e->skeletalSprite.toggleBone(e->skeletalSprite.getBoneIdx(b), lua_tonumber(L, 3));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setColor)
@@ -2394,7 +2396,7 @@ luaFunc(entity_setColor)
 		e->color.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4)),
             lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tointeger(L, 7), lua_tointeger(L, 8));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_scale)
@@ -2405,7 +2407,7 @@ luaFunc(bone_scale)
 		//e->color = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 		e->scale.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_setBlendType)
@@ -2415,13 +2417,15 @@ luaFunc(bone_setBlendType)
 	{
 		b->setBlendType(lua_tonumber(L, 2));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_update)
 {
-	bone(L)->update(lua_tonumber(L, 2));
-	luaReturnNum(0);
+    Bone *b = bone(L);
+    if (b)
+	    b->update(lua_tonumber(L, 2));
+	luaReturnNil();
 }
 
 luaFunc(bone_setColor)
@@ -2433,7 +2437,7 @@ luaFunc(bone_setColor)
         e->color.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4)),
             lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tointeger(L, 7), lua_tointeger(L, 8));
     }
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_rotate)
@@ -2441,7 +2445,7 @@ luaFunc(bone_rotate)
 	Bone *e = bone(L);
 	if (e)
 		e->rotation.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_rotateOffset)
@@ -2449,7 +2453,7 @@ luaFunc(bone_rotateOffset)
 	Bone *e = bone(L);
 	if (e)
 		e->rotationOffset.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_getRotation)
@@ -2469,7 +2473,7 @@ luaFunc(bone_setPosition)
 	{
 		b->position.interpolateTo(Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_getWorldRotation)
@@ -2504,7 +2508,7 @@ luaFunc(entity_setBlendType)
 	{
 		e->setBlendType(lua_tonumber(L, 2));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setEntityType)
@@ -2512,7 +2516,7 @@ luaFunc(entity_setEntityType)
 	Entity *e = entity(L);
 	if (e)
 		e->setEntityType(EntityType(lua_tointeger(L, 2)));
-	luaReturnInt(1);
+	luaReturnNil();
 }
 
 luaFunc(entity_getEntityType)
@@ -2527,7 +2531,7 @@ luaFunc(entity_getEntityType)
 luaFunc(cam_snap)
 {
 	dsq->game->snapCam();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(cam_toNode)
@@ -2538,7 +2542,7 @@ luaFunc(cam_toNode)
 		//dsq->game->cameraPanToNode(p, 500);
 		dsq->game->setCameraFollow(&p->nodes[0].position);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(cam_toEntity)
@@ -2558,7 +2562,7 @@ luaFunc(cam_toEntity)
 			//dsq->game->setCameraFollow(&p->nodes[0].position);
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(cam_setPosition)
@@ -2585,7 +2589,7 @@ luaFunc(cam_setPosition)
 	}
 
 	dsq->cameraPos = p;
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 
@@ -2600,7 +2604,7 @@ luaFunc(entity_spawnParticlesFromCollisionMask)
 		e->spawnParticlesFromCollisionMask(getString(L, 2), intv);
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_initEmitter)
@@ -2612,7 +2616,7 @@ luaFunc(entity_initEmitter)
 	{
 		se->initEmitter(e, pfile);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_startEmitter)
@@ -2623,7 +2627,7 @@ luaFunc(entity_startEmitter)
 	{
 		se->startEmitter(e);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_stopEmitter)
@@ -2634,7 +2638,7 @@ luaFunc(entity_stopEmitter)
 	{
 		se->stopEmitter(e);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_initStrands)
@@ -2644,7 +2648,7 @@ luaFunc(entity_initStrands)
 	{
 		e->initStrands(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), Vector(lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8)));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_initSkeletal)
@@ -2661,7 +2665,7 @@ luaFunc(entity_initSkeletal)
 			e->skeletalSprite.loadSkin(s);
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 
@@ -2672,7 +2676,7 @@ luaFunc(entity_idle)
 	{
 		e->idle();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_stopAllAnimations)
@@ -2680,7 +2684,7 @@ luaFunc(entity_stopAllAnimations)
 	Entity *e = entity(L);
 	if (e)
 		e->skeletalSprite.stopAllAnimations();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setAnimLayerTimeMult)
@@ -2722,7 +2726,7 @@ luaFunc(entity_moveToFront)
 	Entity *e = entity(L);
 	e->moveToFront();
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_moveToBack)
@@ -2730,7 +2734,7 @@ luaFunc(entity_moveToBack)
 	Entity *e = entity(L);
 	e->moveToBack();
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_move)
@@ -2750,7 +2754,7 @@ luaFunc(entity_move)
 	{
 		e->position.interpolateTo(p, lua_tonumber(L, 4), 0, 0, 1);
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(spawnManaBall)
@@ -2760,7 +2764,7 @@ luaFunc(spawnManaBall)
 	p.y = lua_tonumber(L, 2);
 	int amount = lua_tonumber(L, 3);
 	dsq->game->spawnManaBall(p, amount);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(spawnAroundEntity)
@@ -2781,7 +2785,7 @@ luaFunc(spawnAroundEntity)
 			e = dsq->game->createEntity(idx, 0, pos + Vector(sinf(angle)*radius, cosf(angle)*radius), 0, false, name);
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(createBeam)
@@ -2806,7 +2810,7 @@ luaFunc(beam_setPosition)
 		b->position = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 		b->trace();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(beam_setDamage)
@@ -2816,7 +2820,7 @@ luaFunc(beam_setDamage)
 	{
 		b->setDamage(lua_tonumber(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(beam_setBeamWidth)
@@ -2826,7 +2830,7 @@ luaFunc(beam_setBeamWidth)
 	{
 		b->setBeamWidth(lua_tonumber(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(beam_setTexture)
@@ -2836,7 +2840,7 @@ luaFunc(beam_setTexture)
 	{
 		b->setTexture(getString(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(beam_setAngle)
@@ -2847,7 +2851,7 @@ luaFunc(beam_setAngle)
 		b->angle = lua_tonumber(L, 2);
 		b->trace();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(beam_delete)
@@ -2857,7 +2861,7 @@ luaFunc(beam_delete)
 	{
 		b->safeKill();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getStringBank)
@@ -2905,37 +2909,37 @@ luaFunc(savePoint)
 	}
 
 	dsq->doSavePoint(position);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(pause)
 {
 	dsq->game->togglePause(1);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(unpause)
 {
 	dsq->game->togglePause(0);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(clearControlHint)
 {
 	dsq->game->clearControlHint();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setSceneColor)
 {
 	dsq->game->sceneColor3.interpolateTo(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setCameraLerpDelay)
 {
 	dsq->game->cameraLerpDelay = lua_tonumber(L, 1);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setControlHint)
@@ -2954,25 +2958,25 @@ luaFunc(setControlHint)
 		scale = 1;
 
 	dsq->game->setControlHint(str, left, right, middle, t, s, false, songType, scale);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setCanChangeForm)
 {
 	dsq->game->avatar->canChangeForm = getBool(L);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setInvincibleOnNested)
 {
 	dsq->game->invincibleOnNested = getBool(L);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setCanWarp)
 {
 	dsq->game->avatar->canWarp = getBool(L);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_generateCollisionMask)
@@ -2983,7 +2987,7 @@ luaFunc(entity_generateCollisionMask)
 	{
 		e->generateCollisionMask(num);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_damage)
@@ -2999,7 +3003,7 @@ luaFunc(entity_damage)
 
 		e->damage(d);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // must be called in init
@@ -3011,7 +3015,7 @@ luaFunc(entity_setEntityLayer)
 	{
 		e->setEntityLayer(l);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setRenderPass)
@@ -3020,7 +3024,7 @@ luaFunc(entity_setRenderPass)
 	int pass = lua_tonumber(L, 2);
 	if (e)
 		e->setOverrideRenderPass(pass);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // intended to be used for setting max health and refilling it all
@@ -3032,7 +3036,7 @@ luaFunc(entity_setHealth)
 	{
 		e->health = e->maxHealth = h;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // intended to be used for setting max health and refilling it all
@@ -3044,7 +3048,7 @@ luaFunc(entity_changeHealth)
 	{
 		e->health += h;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_heal)
@@ -3052,7 +3056,7 @@ luaFunc(entity_heal)
 	Entity *e = entity(L);
 	if (e)
 		e->heal(lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_revive)
@@ -3060,26 +3064,26 @@ luaFunc(entity_revive)
 	Entity *e = entity(L);
 	if (e)
 		e->revive(lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(screenFadeCapture)
 {
 	dsq->screenTransition->capture();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 
 luaFunc(screenFadeTransition)
 {
 	dsq->screenTransition->transition(lua_tonumber(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(screenFadeGo)
 {
 	dsq->screenTransition->go(lua_tonumber(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(isEscapeKey)
@@ -3103,13 +3107,13 @@ luaFunc(isRightMouse)
 luaFunc(setTimerTextAlpha)
 {
 	dsq->game->setTimerTextAlpha(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setTimerText)
 {
 	dsq->game->setTimerText(lua_tonumber(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getWallNormal)
@@ -3135,7 +3139,7 @@ luaFunc(incrFlag)
 	if (lua_isnumber(L, 2))
 		v = lua_tointeger(L, 2);
 	dsq->continuity.setFlag(f, dsq->continuity.getFlag(f)+v);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(decrFlag)
@@ -3145,7 +3149,7 @@ luaFunc(decrFlag)
 	if (lua_isnumber(L, 2))
 		v = lua_tointeger(L, 2);
 	dsq->continuity.setFlag(f, dsq->continuity.getFlag(f)-v);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setFlag)
@@ -3156,7 +3160,7 @@ luaFunc(setFlag)
 	else
 	*/
 	dsq->continuity.setFlag(lua_tointeger(L, 1), lua_tointeger(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getFlag)
@@ -3207,7 +3211,7 @@ luaFunc(node_setActive)
 	{
 		p->active = v;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(node_setCursorActivation)
@@ -3218,7 +3222,7 @@ luaFunc(node_setCursorActivation)
 	{
 		p->cursorActivation = v;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(node_setCatchActions)
@@ -3229,7 +3233,7 @@ luaFunc(node_setCatchActions)
 	{
 		p->catchActions = v;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(node_isEntityInRange)
@@ -3441,7 +3445,7 @@ luaFunc(node_setPosition)
 		PathNode *node = &p->nodes[0];
 		node->position = Vector(x, y);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 
@@ -3455,7 +3459,7 @@ luaFunc(registerSporeDrop)
 
 	dsq->game->registerSporeDrop(Vector(x,y), t);
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setStringFlag)
@@ -3463,20 +3467,20 @@ luaFunc(setStringFlag)
 	std::string n = getString(L, 1);
 	std::string v = getString(L, 2);
 	dsq->continuity.setStringFlag(n, v);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(centerText)
 {
 	dsq->centerText(getString(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(msg)
 {
 	std::string s(lua_tostring(L, 1));
 	dsq->screenMessage(s);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(chance)
@@ -3501,7 +3505,7 @@ luaFunc(entity_handleShotCollisions)
 	{
 		dsq->game->handleShotCollisions(e);
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_handleShotCollisionsSkeletal)
@@ -3511,7 +3515,7 @@ luaFunc(entity_handleShotCollisionsSkeletal)
 	{
 		dsq->game->handleShotCollisionsSkeletal(e);
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_handleShotCollisionsHair)
@@ -3521,7 +3525,7 @@ luaFunc(entity_handleShotCollisionsHair)
 	{
 		dsq->game->handleShotCollisionsHair(e, lua_tonumber(L, 2));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_collideSkeletalVsCircle)
@@ -3622,7 +3626,7 @@ luaFunc(entity_collideSkeletalVsCircleForListByName)
 			}
 		}
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_debugText)
@@ -3638,7 +3642,7 @@ luaFunc(entity_debugText)
 		f->setDecayRate(1);
 		f->fadeAlphaWithLife=1;
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getHealth)
@@ -3647,7 +3651,7 @@ luaFunc(entity_getHealth)
 	if (e)
 		luaReturnNum(e->health);
 	else
-		luaReturnNum(0);
+		luaReturnNil();
 }
 
 luaFunc(entity_initSegments)
@@ -3656,7 +3660,7 @@ luaFunc(entity_initSegments)
 	if (se)
 		se->initSegments(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tostring(L, 5), lua_tostring(L, 6), lua_tointeger(L, 7), lua_tointeger(L, 8), lua_tonumber(L, 9), lua_tointeger(L, 10));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_warpSegments)
@@ -3665,20 +3669,20 @@ luaFunc(entity_warpSegments)
 	if (se)
 		se->warpSegments();
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_incrLeaches)
 {
 	dsq->game->avatar->leaches++;
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_decrLeaches)
 {
 	if(dsq->game->avatar->leaches)
         dsq->game->avatar->leaches--;
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_rotateToVel)
@@ -3691,7 +3695,7 @@ luaFunc(entity_rotateToVel)
 			e->rotateToVec(e->vel, lua_tonumber(L, 2), lua_tointeger(L, 3));
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_rotateToEntity)
@@ -3707,7 +3711,7 @@ luaFunc(entity_rotateToEntity)
 			e->rotateToVec(vec, lua_tonumber(L, 3), lua_tointeger(L, 4));
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_rotateToVec)
@@ -3721,7 +3725,7 @@ luaFunc(entity_rotateToVec)
 			e->rotateToVec(vec, lua_tonumber(L, 4), lua_tointeger(L, 5));
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_update)
@@ -3729,7 +3733,7 @@ luaFunc(entity_update)
 	Entity *e = entity(L);
 	if (e)
 		e->update(lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_updateSkeletal)
@@ -3737,7 +3741,7 @@ luaFunc(entity_updateSkeletal)
 	Entity *e = entity(L);
 	if (e)
 		e->skeletalSprite.update(lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_msg)
@@ -3750,7 +3754,7 @@ luaFunc(entity_msg)
 		else
 			e->message(getString(L, 2), lua_tonumber(L, 3));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_updateCurrents)
@@ -3770,7 +3774,7 @@ luaFunc(entity_updateMovement)
 	ScriptedEntity *e = scriptedEntity(L);
 	if (e)
 		e->updateMovement(lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_applySurfaceNormalForce)
@@ -3791,7 +3795,7 @@ luaFunc(entity_applySurfaceNormalForce)
 		v.setLength2D(lua_tointeger(L, 2));
 		e->vel += v;
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getRotation)
@@ -3811,7 +3815,7 @@ luaFunc(flingMonkey)
 
 	dsq->continuity.flingMonkey(e);
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getDistanceToTarget)
@@ -3840,7 +3844,7 @@ luaFunc(entity_watchEntity)
 	{
 		e->watchEntity(e2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setNaijaHeadTexture)
@@ -3850,7 +3854,7 @@ luaFunc(setNaijaHeadTexture)
 	{
 		a->setHeadTexture(lua_tostring(L, 1), lua_tonumber(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_flipToSame)
@@ -3865,7 +3869,7 @@ luaFunc(entity_flipToSame)
 			e->flipHorizontal();
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_flipToEntity)
@@ -3876,7 +3880,7 @@ luaFunc(entity_flipToEntity)
 	{
 		e->flipToTarget(e2->position);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_flipToNode)
@@ -3888,7 +3892,7 @@ luaFunc(entity_flipToNode)
 	{
 		e->flipToTarget(n->position);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_flipToVel)
@@ -3898,7 +3902,7 @@ luaFunc(entity_flipToVel)
 	{
 		e->flipToVel();
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(node_isEntityIn)
@@ -3995,7 +3999,7 @@ luaFunc(entity_flipHorizontal)
 	Entity *e = entity(L);
 	if (e)
 		e->flipHorizontal();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_fhTo)
@@ -4004,7 +4008,7 @@ luaFunc(entity_fhTo)
 	bool b = getBool(L);
 	if (e)
 		e->fhTo(b);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_flipVertical)
@@ -4012,7 +4016,7 @@ luaFunc(entity_flipVertical)
 	Entity *e = entity(L);
 	if (e)
 		e->flipVertical();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(createQuad)
@@ -4035,7 +4039,7 @@ luaFunc(quad_scale)
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 		q->scale.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(quad_rotate)
@@ -4043,7 +4047,7 @@ luaFunc(quad_rotate)
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 		q->rotation.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(quad_color)
@@ -4054,7 +4058,7 @@ luaFunc(quad_color)
 		//e->color = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 		q->color.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4)), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(quad_alpha)
@@ -4062,7 +4066,7 @@ luaFunc(quad_alpha)
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 		q->alpha.interpolateTo(Vector(lua_tonumber(L, 2),0,0), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(quad_alphaMod)
@@ -4070,7 +4074,7 @@ luaFunc(quad_alphaMod)
 	PauseQuad *q = getPauseQuad(L);
 	if (q)
 		q->alphaMod = lua_tonumber(L, 2);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(quad_getAlpha)
@@ -4098,7 +4102,7 @@ luaFunc(quad_delete)
 			q->fadeAlphaWithLife = 1;
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 
@@ -4109,7 +4113,7 @@ luaFunc(quad_setBlendType)
 	{
 		q->setBlendType(lua_tonumber(L, 2));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(quad_setPosition)
@@ -4119,7 +4123,7 @@ luaFunc(quad_setPosition)
 	float y = lua_tonumber(L, 3);
 	if (q)
 		q->position.interpolateTo(Vector(x,y), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setupEntity)
@@ -4134,7 +4138,7 @@ luaFunc(setupEntity)
 		}
 		se->setupEntity(tex, lua_tonumber(L, 3));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setupBasicEntity)
@@ -4144,7 +4148,7 @@ luaFunc(setupBasicEntity)
 	if (se)
 		se->setupBasicEntity(lua_tostring(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6), lua_tointeger(L, 7), lua_tointeger(L, 8), lua_tointeger(L, 9), lua_tointeger(L, 10), lua_tointeger(L, 11), lua_tointeger(L, 12), lua_tointeger(L, 13), lua_tointeger(L, 14));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setBeautyFlip)
@@ -4154,7 +4158,7 @@ luaFunc(entity_setBeautyFlip)
 	{
 		e->beautyFlip = getBool(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setInvincible)
@@ -4172,7 +4176,7 @@ luaFunc(entity_setInvincible)
 		e->setInvincible(getBool(L, 2));
 
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setDeathSound)
@@ -4182,7 +4186,7 @@ luaFunc(entity_setDeathSound)
 	{
 		e->deathSound = lua_tostring(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setDeathParticleEffect)
@@ -4192,7 +4196,7 @@ luaFunc(entity_setDeathParticleEffect)
 	{
 		se->deathParticleEffect = getString(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setNaijaReaction)
@@ -4205,7 +4209,7 @@ luaFunc(entity_setNaijaReaction)
 	{
 		e->naijaReaction = s;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setName)
@@ -4219,7 +4223,7 @@ luaFunc(entity_setName)
 		debugLog("setting entity name to: " + s);
 		e->setName(s);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_pathBurst)
@@ -4238,7 +4242,7 @@ luaFunc(entity_moveTowardsAngle)
 	{
 		e->moveTowardsAngle(lua_tointeger(L, 2), lua_tonumber(L, 3), lua_tointeger(L, 4));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_moveAroundAngle)
@@ -4248,7 +4252,7 @@ luaFunc(entity_moveAroundAngle)
 	{
 		e->moveTowardsAngle(lua_tointeger(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_moveTowards)
@@ -4258,7 +4262,7 @@ luaFunc(entity_moveTowards)
 	{
 		e->moveTowards(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_moveAround)
@@ -4268,7 +4272,7 @@ luaFunc(entity_moveAround)
 	{
 		e->moveAround(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_addVel)
@@ -4278,7 +4282,7 @@ luaFunc(entity_addVel)
 	{
 		e->vel += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_addVel2)
@@ -4288,7 +4292,7 @@ luaFunc(entity_addVel2)
 	{
 		e->vel2 += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_addRandomVel)
@@ -4304,7 +4308,7 @@ luaFunc(entity_addRandomVel)
 		e->vel += add;
 		//e->vel += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isValidTarget)
@@ -4366,7 +4370,7 @@ luaFunc(entity_clearVel)
 	Entity *e = entity(L);
 	if (e)
 		e->vel = Vector(0,0,0);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_clearVel2)
@@ -4374,7 +4378,7 @@ luaFunc(entity_clearVel2)
 	Entity *e = entity(L);
 	if (e)
 		e->vel2 = Vector(0,0,0);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getScreenCenter)
@@ -4387,7 +4391,7 @@ luaFunc(entity_rotate)
 	Entity *e = entity(L);
 	if (e)
 		e->rotation.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_rotateOffset)
@@ -4395,7 +4399,7 @@ luaFunc(entity_rotateOffset)
 	Entity *e = entity(L);
 	if (e)
 		e->rotationOffset.interpolateTo(Vector(0,0,lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isState)
@@ -4448,7 +4452,7 @@ luaFunc(entity_setTarget)
 	{
 		e->setTargetEntity(t);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setBounce)
@@ -4456,7 +4460,7 @@ luaFunc(entity_setBounce)
 	CollideEntity *e = collideEntity(L);
 	if (e)
 		e->bounceAmount = e->bounceEntityAmount = lua_tonumber(L, 2);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_isSinging)
@@ -4475,7 +4479,7 @@ luaFunc(avatar_isTouchHit)
 luaFunc(avatar_clampPosition)
 {
 	dsq->game->avatar->clampPosition();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setPosition)
@@ -4508,7 +4512,7 @@ luaFunc(entity_setTexture)
 		std::string s = lua_tostring(L, 2);
 		e->setTexture(s);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setMaxSpeed)
@@ -4517,7 +4521,7 @@ luaFunc(entity_setMaxSpeed)
 	if (e)
 		e->setMaxSpeed(lua_tointeger(L, 2));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getMaxSpeed)
@@ -4536,7 +4540,7 @@ luaFunc(entity_setMaxSpeedLerp)
 	if (e)
 		e->maxSpeedLerp.interpolateTo(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // note: this is a weaker setState than perform
@@ -4560,7 +4564,7 @@ luaFunc(entity_setState)
 		me->setState(state, time, force);
 		//}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getBoneByIdx)
@@ -4656,7 +4660,7 @@ luaFunc(bone_damageFlash)
 		b->color = Vector(1,1,1);
 		b->color.interpolateTo(toColor, 0.1, 5, 1);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_isVisible)
@@ -4673,7 +4677,7 @@ luaFunc(bone_setVisible)
 	Bone *b = bone(L);
 	if (b)
 		b->renderQuad = getBool(L, 2);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_setTexture)
@@ -4683,7 +4687,7 @@ luaFunc(bone_setTexture)
 	{
 		b->setTexture(lua_tostring(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_setTouchDamage)
@@ -4693,7 +4697,7 @@ luaFunc(bone_setTouchDamage)
 	{
 		b->touchDamage = lua_tonumber(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_getIndex)
@@ -4731,13 +4735,13 @@ luaFunc(overrideZoom)
 {
 	dsq->game->overrideZoom(lua_tonumber(L, 1), lua_tonumber(L, 2));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(disableOverrideZoom)
 {
 	dsq->game->toggleOverrideZoom(false);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // dt, range, mod
@@ -4746,7 +4750,7 @@ luaFunc(entity_doSpellAvoidance)
 	Entity *e = entity(L);
 	if (e)
 		e->doSpellAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // dt, range, mod, ignore
@@ -4755,7 +4759,7 @@ luaFunc(entity_doEntityAvoidance)
 	Entity *e = entity(L);
 	if (e)
 		e->doEntityAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), e->getTargetEntity());
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // doCollisionAvoidance(me, dt, search, mod)
@@ -4780,13 +4784,13 @@ luaFunc(entity_doCollisionAvoidance)
 luaFunc(setOverrideMusic)
 {
 	dsq->game->overrideMusic = getString(L, 1);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setOverrideVoiceFader)
 {
 	dsq->sound->setOverrideVoiceFader(lua_tonumber(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setGameSpeed)
@@ -4794,7 +4798,7 @@ luaFunc(setGameSpeed)
 	dsq->gameSpeed.stop();
 	dsq->gameSpeed.stopPath();
 	dsq->gameSpeed.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(sendEntityMessage)
@@ -4803,7 +4807,7 @@ luaFunc(sendEntityMessage)
 	if (e)
 		e->onMessage(lua_tostring(L, 2));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bedEffects)
@@ -4823,7 +4827,7 @@ luaFunc(bedEffects)
 	dsq->game->positionToAvatar = bedPosition;
 	dsq->game->transitionToScene(dsq->game->sceneName);
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setDeathScene)
@@ -4833,7 +4837,7 @@ luaFunc(entity_setDeathScene)
 	{
 		e->setDeathScene(getBool(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setCollideWithAvatar)
@@ -4843,7 +4847,7 @@ luaFunc(entity_setCollideWithAvatar)
 	{
 		e->collideWithAvatar = getBool(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setCurrentTarget)
@@ -4851,7 +4855,7 @@ luaFunc(entity_setCurrentTarget)
 	Entity *e = entity(L);
 	if (e)
 		e->currentEntityTarget = lua_tointeger(L, 2);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(setMiniMapHint)
@@ -4860,7 +4864,7 @@ luaFunc(setMiniMapHint)
 	is >> dsq->game->miniMapHint.scene >> dsq->game->miniMapHint.warpAreaType;
 	dsq->game->updateMiniMapHintPosition();
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entityFollowEntity)
@@ -4871,7 +4875,7 @@ luaFunc(entityFollowEntity)
 		e->followEntity = dsq->getEntityByName(lua_tostring(L, 2));
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isFollowingEntity)
@@ -4896,7 +4900,7 @@ luaFunc(entity_followEntity)
 		e1->followEntity = e2;
 		e1->followPos = lua_tointeger(L, 3);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(toggleInput)
@@ -4906,7 +4910,7 @@ luaFunc(toggleInput)
 		dsq->game->avatar->enableInput();
 	else
 		dsq->game->avatar->disableInput();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(bone_offset)
@@ -4914,7 +4918,7 @@ luaFunc(bone_offset)
 	Bone *b = bone(L);
 	if (b)
 		b->offset.interpolateTo(Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_offset)
@@ -4922,7 +4926,7 @@ luaFunc(entity_offset)
 	Entity *e = entity(L);
 	if (e)
 		e->offset.interpolateTo(Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(warpAvatar)
@@ -4930,7 +4934,7 @@ luaFunc(warpAvatar)
 	dsq->game->positionToAvatar = Vector(lua_tointeger(L, 2),lua_tointeger(L, 3));
 	dsq->game->transitionToScene(lua_tostring(L, 1));
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(warpNaijaToSceneNode)
@@ -4949,7 +4953,7 @@ luaFunc(warpNaijaToSceneNode)
 		dsq->game->transitionToScene(scene);
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(registerSporeChildData)
@@ -4959,7 +4963,7 @@ luaFunc(registerSporeChildData)
 	{
 		dsq->continuity.registerSporeChildData(e);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setDamageTarget)
@@ -4969,7 +4973,7 @@ luaFunc(entity_setDamageTarget)
 	{
 		e->setDamageTarget((DamageType)lua_tointeger(L, 2), getBool(L, 3));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setAllDamageTargets)
@@ -4979,7 +4983,7 @@ luaFunc(entity_setAllDamageTargets)
 	{
 		e->setAllDamageTargets(getBool(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isDamageTarget)
@@ -5000,7 +5004,7 @@ luaFunc(entity_setTargetRange)
 	{
 		e->targetRange = lua_tonumber(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_clearTargetPoints)
@@ -5008,7 +5012,7 @@ luaFunc(entity_clearTargetPoints)
 	Entity *e = entity(L);
 	if (e)
 		e->clearTargetPoints();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_addTargetPoint)
@@ -5016,7 +5020,7 @@ luaFunc(entity_addTargetPoint)
 	Entity *e = entity(L);
 	if (e)
 		e->addTargetPoint(Vector(lua_tonumber(L,2), lua_tonumber(L, 3)));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getTargetPoint)
@@ -5046,20 +5050,20 @@ luaFunc(entity_getRandomTargetPoint)
 luaFunc(playVisualEffect)
 {
 	dsq->playVisualEffect(lua_tonumber(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(playNoEffect)
 {
 	dsq->playNoEffect();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(emote)
 {
 	int emote = lua_tonumber(L, 1);
 	dsq->emote.playSfx(emote);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(playSfx)
@@ -5110,34 +5114,34 @@ luaFunc(fadeSfx)
 luaFunc(resetTimer)
 {
 	dsq->resetTimer();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(stopMusic)
 {
 	dsq->sound->stopMusic();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(playMusic)
 {
 	float crossfadeTime = 0.8;
 	dsq->sound->playMusic(std::string(lua_tostring(L, 1)), SLT_LOOP, SFT_CROSS, crossfadeTime);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(playMusicStraight)
 {
 	dsq->sound->setMusicFader(1,0);
 	dsq->sound->playMusic(getString(L, 1), SLT_LOOP, SFT_IN, 0.5); //SFT_IN, 0.1);//, SFT_IN, 0.2);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(playMusicOnce)
 {
 	float crossfadeTime = 0.8;
 	dsq->sound->playMusic(std::string(lua_tostring(L, 1)), SLT_NONE, SFT_CROSS, crossfadeTime);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(addInfluence)
@@ -5148,13 +5152,13 @@ luaFunc(addInfluence)
 	pinf.size = lua_tonumber(L, 3);
 	pinf.spd = lua_tonumber(L, 4);
 	dsq->particleManager->addInfluence(pinf);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(updateMusic)
 {
 	dsq->game->updateMusic();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_grabTarget)
@@ -5162,7 +5166,7 @@ luaFunc(entity_grabTarget)
 	Entity *e = entity(L);
     if (e)
 	    e->attachEntity(e->getTargetEntity(), Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_clampToHit)
@@ -5170,7 +5174,7 @@ luaFunc(entity_clampToHit)
 	Entity *e = entity(L);
 	if (e)
 		e->clampToHit();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_clampToSurface)
@@ -5198,7 +5202,7 @@ luaFunc(entity_switchSurfaceDirection)
 {
 	ScriptedEntity *e = scriptedEntity(L);
     if (!e)
-        luaReturnNum(0);
+        luaReturnNil();
 
 	int n = -1;
 	if (lua_isnumber(L, 2))
@@ -5238,7 +5242,7 @@ luaFunc(entity_switchSurfaceDirection)
 		e->surfaceMoveDir = n;
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_adjustPositionBySurfaceNormal)
@@ -5255,7 +5259,7 @@ luaFunc(entity_adjustPositionBySurfaceNormal)
 		e->setv(EV_CRAWLING, 0);
 		//e->setCrawling(false);
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 // HACK: move functionality inside entity class
@@ -5396,7 +5400,7 @@ luaFunc(entity_moveAlongSurface)
 		}
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_rotateToSurfaceNormal)
@@ -5412,7 +5416,7 @@ luaFunc(entity_rotateToSurfaceNormal)
 	}
 	//Entity *e = entity(L);
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_releaseTarget)
@@ -5420,7 +5424,7 @@ luaFunc(entity_releaseTarget)
 	Entity *e = entity(L);
     if (e)
 	    e->detachEntity(e->getTargetEntity());
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(esetv)
@@ -5482,7 +5486,7 @@ luaFunc(entity_setWidth)
 	if (e)
 		e->setWidth(lua_tonumber(L, 2));
 		//e->width.interpolateTo(Vector(lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setHeight)
@@ -5491,7 +5495,7 @@ luaFunc(entity_setHeight)
 	if (e)
 		e->setHeight(lua_tonumber(L, 2));
 		//e->height.interpolateTo(Vector(lua_tonumber(L, 2)), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(vector_normalize)
@@ -5557,7 +5561,7 @@ luaFunc(entity_push)
 	{
 		e->push(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_pushTarget)
@@ -5574,7 +5578,7 @@ luaFunc(entity_pushTarget)
 		}
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(watch)
@@ -5582,13 +5586,13 @@ luaFunc(watch)
 	float t = lua_tonumber(L, 1);
 	int quit = lua_tointeger(L, 2);
 	dsq->watch(t, quit);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(wait)
 {
 	core->main(lua_tonumber(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(warpNaijaToEntity)
@@ -5605,7 +5609,7 @@ luaFunc(warpNaijaToEntity)
 		dsq->overlay->alpha.interpolateTo(0, 1);
 		core->main(1);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getTimer)
@@ -5665,7 +5669,7 @@ luaFunc(entity_pullEntities)
 			}
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_delete)
@@ -5687,7 +5691,7 @@ luaFunc(entity_delete)
 			e->setDecayRate(1.0f/time);
 		}
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 
@@ -5699,7 +5703,7 @@ luaFunc(entity_setCull)
 	{
 		e->cull = v;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isRidingOnEntity)
@@ -5732,7 +5736,7 @@ luaFunc(entity_setProperty)
 	{
 		e->setEntityProperty((EntityProperty)lua_tointeger(L, 2), getBool(L, 3));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setActivation)
@@ -5749,7 +5753,7 @@ luaFunc(entity_setActivation)
 	    e->activationRadius = activationRadius;
     }
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setCullRadius)
@@ -5759,7 +5763,7 @@ luaFunc(entity_setCullRadius)
 	{
 		e->setOverrideCullRadius(lua_tonumber(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setActivationType)
@@ -5771,7 +5775,7 @@ luaFunc(entity_setActivationType)
 	    e->activationType = (Entity::ActivationType)type;
     }
 
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_hasTarget)
@@ -5797,7 +5801,7 @@ luaFunc(entity_hurtTarget)
 	if (e && e->getTargetEntity())
 		e->getTargetEntity(e->currentEntityTarget)->damage(lua_tointeger(L, 2), 0, e);
 	*/
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 // radius dmg speed pushtime
@@ -5863,7 +5867,7 @@ luaFunc(setLi)
 {
 	dsq->game->li = entity(L);
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isPositionInRange)
@@ -5905,7 +5909,7 @@ luaFunc(entity_moveTowardsTarget)
 		e->moveTowardsTarget(lua_tonumber(L, 2), lua_tonumber(L, 3), e->currentEntityTarget);
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setVelLen)
@@ -5916,7 +5920,7 @@ luaFunc(entity_setVelLen)
 	{
 		e->vel.setLength2D(len);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getVel)
@@ -5935,7 +5939,7 @@ luaFunc(entity_moveAroundTarget)
 	if (e)
 		e->moveAroundTarget(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4), e->currentEntityTarget);
 	// do stuff
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_rotateToTarget)
@@ -5950,7 +5954,7 @@ luaFunc(entity_rotateToTarget)
 			e->rotateToVec(v, lua_tonumber(L, 2), lua_tointeger(L, 3));
 		}
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 /*
@@ -5969,7 +5973,7 @@ luaFunc(entity_partWidthHeight)
 		int h = lua_tointeger(L, 4);
 		r->setWidthHeight(w, h);
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_partSetSegs)
@@ -5980,7 +5984,7 @@ luaFunc(entity_partSetSegs)
 	{
 		r->setSegs(lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tonumber(L, 9), lua_tointeger(L, 10));
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(getEntityInGroup)
@@ -6059,7 +6063,7 @@ luaFunc(node_setEffectOn)
 	Path *p = path(L, 1);
     if (p)
 	    p->setEffectOn(getBool(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(node_activate)
@@ -6072,7 +6076,7 @@ luaFunc(node_activate)
 	{
 		p->activate(e);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(node_setElementsInLayerActive)
@@ -6091,7 +6095,7 @@ luaFunc(node_setElementsInLayerActive)
 		    }
 	    }
     }
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(node_getNumEntitiesIn)
@@ -6230,7 +6234,7 @@ luaFunc(entity_getNearestEntity)
 {
 	Entity *me = entity(L);
     if(!me)
-        luaReturnNum(0);
+        luaReturnPtr(NULL);
 
 	const char *name = 0;
 	if (lua_isstring(L, 2))
@@ -6400,7 +6404,7 @@ luaFunc(entity_partAlpha)
 	    }
     }
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_partBlendType)
@@ -6408,7 +6412,7 @@ luaFunc(entity_partBlendType)
 	ScriptedEntity *e = scriptedEntity(L);
     if (e)
 	    e->partMap[lua_tostring(L, 2)]->setBlendType(lua_tointeger(L, 3));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_partRotate)
@@ -6423,7 +6427,7 @@ luaFunc(entity_partRotate)
 	    }
     }
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getStateTime)
@@ -6455,7 +6459,7 @@ luaFunc(entity_offsetUpdate)
 		e->update(t);
 		e->updateCull = uc;
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_scale)
@@ -6467,7 +6471,7 @@ luaFunc(entity_scale)
 	    //e->scale = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	    e->scale.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), 0), time, lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
     }
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_switchLayer)
@@ -6485,7 +6489,7 @@ luaFunc(entity_switchLayer)
 
 	    core->switchRenderObjectLayer(e, toLayer);
     }
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isScaling)
@@ -6516,7 +6520,7 @@ luaFunc(entity_initHair)
 	{
 		se->initHair(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tostring(L, 5));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getHairPosition)
@@ -6544,7 +6548,7 @@ luaFunc(entity_setUpdateCull)
 	{
 		e->updateCull = lua_tonumber(L, 2);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // entity x y z
@@ -6555,7 +6559,7 @@ luaFunc(entity_setHairHeadPosition)
 	{
 		se->setHairHeadPosition(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_updateHair)
@@ -6565,7 +6569,7 @@ luaFunc(entity_updateHair)
 	{
 		se->updateHair(lua_tonumber(L, 2));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // entity x y dt
@@ -6577,7 +6581,7 @@ luaFunc(entity_exertHairForce)
 		if (se->hair)
 			se->hair->exertForce(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_initPart)
@@ -6612,7 +6616,7 @@ luaFunc(entity_initPart)
 	    e->registerNewPart(q, partName);
     }
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_findTarget)
@@ -6621,7 +6625,7 @@ luaFunc(entity_findTarget)
 	if (e)
 		e->findTarget(lua_tointeger(L, 2), lua_tointeger(L, 3), e->currentEntityTarget);
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_doFriction)
@@ -6631,7 +6635,7 @@ luaFunc(entity_doFriction)
 	{
 		e->doFriction(lua_tonumber(L, 2), lua_tointeger(L, 3));
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_doGlint)
@@ -6639,7 +6643,7 @@ luaFunc(entity_doGlint)
 	Entity *e = entity(L);
 	if (e)
 		e->doGlint(e->position, Vector(2,2), getString(L,2), (RenderObject::BlendTypes)lua_tointeger(L, 3));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getPosition)
@@ -6749,7 +6753,7 @@ luaFunc(entity_interpolateTo)
 	{
 		e->position.interpolateTo(Vector(x, y), t);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setEatType)
@@ -6766,7 +6770,7 @@ luaFunc(entity_setPositionX)
 	Entity *e = entity(L);
 	if (e)
 		e->position.x = lua_tointeger(L, 2);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setPositionY)
@@ -6774,7 +6778,7 @@ luaFunc(entity_setPositionY)
 	Entity *e = entity(L);
 	if (e)
 		e->position.y = lua_tointeger(L, 2);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_rotateTo)
@@ -6782,7 +6786,7 @@ luaFunc(entity_rotateTo)
 	Entity *e = entity(L);
 	if (e)
 		e->rotation.interpolateTo(Vector(0,0,lua_tointeger(L, 2)), lua_tonumber(L, 3));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(getMapName)
@@ -6828,7 +6832,7 @@ luaFunc(entity_fireGas)
 		GasCloud *c = new GasCloud(e, e->position + Vector(offx, offy), gfx, Vector(colorx, colory, colorz), radius, life, damage, false, poisonTime);
 		core->getTopStateData()->addRenderObject(c, LR_PARTICLES);
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(isInputEnabled)
@@ -6839,13 +6843,13 @@ luaFunc(isInputEnabled)
 luaFunc(enableInput)
 {
 	dsq->game->avatar->enableInput();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(disableInput)
 {
 	dsq->game->avatar->disableInput();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(getInputMode)
@@ -6861,25 +6865,25 @@ luaFunc(quit)
 	dsq->quit();
 #endif
 
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(doModSelect)
 {
 	dsq->doModSelect();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(doLoadMenu)
 {
 	dsq->doLoadMenu();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(resetContinuity)
 {
 	dsq->continuity.reset();
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(toWindowFromWorld)
@@ -6898,7 +6902,7 @@ luaFunc(toWindowFromWorld)
 luaFunc(setMousePos)
 {
 	core->setMousePosition(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getMousePos)
@@ -6916,33 +6920,33 @@ luaFunc(fade)
 {
 	dsq->overlay->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	dsq->overlay->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(fade2)
 {
 	dsq->overlay2->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	dsq->overlay2->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(fade3)
 {
 	dsq->overlay3->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	dsq->overlay3->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(vision)
 {
 	dsq->vision(lua_tostring(L, 1), lua_tonumber(L, 2), getBool(L, 3));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(musicVolume)
 {
 	dsq->sound->setMusicFader(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(voice)
@@ -6953,50 +6957,50 @@ luaFunc(voice)
 	else if (vmod == -1)
 		vmod = 0;
 	dsq->voice(lua_tostring(L, 1), vmod);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(voiceOnce)
 {
 	dsq->voiceOnce(lua_tostring(L, 1));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(voiceInterupt)
 {
 	dsq->voiceInterupt(lua_tostring(L, 1));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(stopVoice)
 {
 	dsq->stopVoice();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(stopAllSfx)
 {
 	dsq->sound->stopAllSfx();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(stopAllVoice)
 {
 	dsq->sound->stopAllVoice();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(fadeIn)
 {
 	dsq->overlay->alpha.interpolateTo(0, lua_tonumber(L, 1));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(fadeOut)
 {
 	dsq->overlay->color = 0;
 	dsq->overlay->alpha.interpolateTo(1, lua_tonumber(L, 1));
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setWeight)
@@ -7004,13 +7008,13 @@ luaFunc(entity_setWeight)
 	CollideEntity *e = collideEntity(L);
 	if (e)
 		e->weight = lua_tointeger(L, 2);
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(pickupGem)
 {
 	dsq->continuity.pickupGem(getString(L), !getBool(L, 2));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(beaconEffect)
@@ -7027,7 +7031,7 @@ luaFunc(beaconEffect)
 
 	dsq->sound->playSfx("ping");
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setBeacon)
@@ -7047,7 +7051,7 @@ luaFunc(setBeacon)
 
 	dsq->continuity.setBeacon(index, v, pos, color);
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getBeacon)
@@ -7071,7 +7075,7 @@ luaFunc(getCostume)
 luaFunc(setCostume)
 {
 	dsq->continuity.setCostume(getString(L));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setElementLayerVisible)
@@ -7079,7 +7083,7 @@ luaFunc(setElementLayerVisible)
 	int l = lua_tonumber(L, 1);
 	bool v = getBool(L, 2);
 	dsq->game->setElementLayerVisible(l, v);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(isElementLayerVisible)
@@ -7187,7 +7191,7 @@ luaFunc(entity_setFlag)
 	{
 		dsq->continuity.setEntityFlag(dsq->game->sceneName, e->getID(), v);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_getFlag)
@@ -7231,19 +7235,19 @@ luaFunc(isFlag)
 luaFunc(avatar_updatePosition)
 {
 	dsq->game->avatar->updatePosition();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_toggleMovement)
 {
 	dsq->game->avatar->toggleMovement((bool)lua_tointeger(L, 1));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(clearShots)
 {
 	Shot::killAllShots();
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(clearHelp)
@@ -7271,7 +7275,7 @@ luaFunc(clearHelp)
 		ro = rl->getNext();
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(setLiPower)
@@ -7279,7 +7283,7 @@ luaFunc(setLiPower)
 	float m = lua_tonumber(L, 1);
 	float t = lua_tonumber(L, 2);
 	dsq->continuity.setLiPower(m, t); 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(getLiPower)
@@ -7307,7 +7311,7 @@ luaFunc(appendUserDataPath)
 luaFunc(avatar_refreshModel)
 {
     dsq->game->avatar->refreshModel(getString(L, 1), getString(L, 2));
-    luaReturnNum(0);
+    luaReturnNil();
 }
 
 //--------------------------------------------------------------------------------------------
@@ -8024,6 +8028,8 @@ static const struct {
 	luaRegister(shot_setAimVector),
 	luaRegister(shot_setOut),
 	luaRegister(shot_setVel),
+    luaRegister(shot_addQuad),
+    luaRegister(shot_removeQuad),
 	luaRegister(entity_pathBurst),
 	luaRegister(entity_handleShotCollisions),
 	luaRegister(entity_handleShotCollisionsSkeletal),
@@ -8959,6 +8965,7 @@ lua_State *ScriptInterface::createLuaVM()
 	luaopen_table(state);			/* opens the table library */
 	luaopen_string(state);			/* opens the string lib. */
 	luaopen_math(state);			/* opens the math lib. */
+    luaopen_debug(state);
 
 	// Set up various tables for state management:
 
@@ -9109,6 +9116,11 @@ int ScriptInterface::destroyLuaThread(const std::string &file, lua_State *thread
 void ScriptInterface::collectGarbage()
 {
 	lua_gc(baseState, LUA_GCCOLLECT, 0);
+}
+
+int ScriptInterface::gcGetStats()
+{
+	return lua_gc(baseState, LUA_GCCOUNT, 0);
 }
 
 Script *ScriptInterface::openScript(const std::string &file, bool ignoremissing /* = false */)
